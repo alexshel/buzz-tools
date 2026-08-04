@@ -129,15 +129,31 @@
   #results .count {
     font-size: 0.95rem;
     font-weight: 600;
-    margin-bottom: 12px;
+    margin-bottom: 20px;
+    color: var(--ink-soft);
   }
   #results .words {
-    font-size: 1.05rem;
-    line-height: 1.75;
-    word-spacing: 0.4em;
+    font-size: 1.1rem;
+    line-height: 2.2;
+    word-spacing: 0.6em;
+    font-weight: 500;
+    color: var(--ink);
+    background: linear-gradient(180deg, transparent 40%, var(--accent) 40%);
+    background-size: 100% 2.2em;
+    background-repeat: repeat-y;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    display: inline-block;
+    padding: 4px 0;
+  }
+  #results .words span {
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
   #results .meta {
-    margin-top: 10px;
+    margin-top: 16px;
     font-size: 0.8rem;
     color: var(--ink-soft);
   }

@@ -89,7 +89,7 @@
       output.count.textContent = n
         ? (n === 1 ? "1 word" : n + " words") + " from “" + letters + "”"
         : "No words can be spelled from those letters.";
-      output.words.textContent = words.join("  ");
+      output.words.innerHTML = words.map(w => "<span>" + w + "</span>").join("  ");
       output.meta.textContent = n ? "found in " + ms + " ms" : "";
     }
 
