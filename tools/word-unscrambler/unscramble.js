@@ -76,6 +76,9 @@
       words: document.createElement("p"),
       meta: document.createElement("p")
     };
+    output.count.className = "count";
+    output.words.className = "words";
+    output.meta.className = "meta";
     results.appendChild(output.count);
     results.appendChild(output.words);
     results.appendChild(output.meta);
