@@ -189,8 +189,10 @@
   }
   .word-btn:hover .word-text,
   .word-btn:focus-visible .word-text {
+    -webkit-background-clip: initial;
     -webkit-text-fill-color: var(--accent-ink);
     background-clip: initial;
+    color: var(--accent-ink);
   }
   .word-btn .copy-icon {
     flex-shrink: 0;
@@ -208,8 +210,10 @@
     color: #22c55e;
   }
   .word-btn.copied .word-text {
+    -webkit-background-clip: initial;
     -webkit-text-fill-color: #22c55e;
     background-clip: initial;
+    color: #22c55e;
   }
 
   #results .meta {
