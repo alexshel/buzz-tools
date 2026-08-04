@@ -138,19 +138,6 @@
     word-spacing: 0.6em;
     font-weight: 500;
     color: var(--ink);
-    background: linear-gradient(180deg, transparent 40%, var(--accent) 40%);
-    background-size: 100% 2.2em;
-    background-repeat: repeat-y;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    display: inline-block;
-    padding: 4px 0;
-  }
-  #results .words span {
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
   }
 
   /* Word buttons with copy functionality */
@@ -183,15 +170,10 @@
     transform: scale(0.97);
   }
   .word-btn .word-text {
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    /* Normal text, inherits color from button */
   }
   .word-btn:hover .word-text,
   .word-btn:focus-visible .word-text {
-    -webkit-background-clip: initial;
-    -webkit-text-fill-color: var(--accent-ink);
-    background-clip: initial;
     color: var(--accent-ink);
   }
   .word-btn .copy-icon {
@@ -210,9 +192,6 @@
     color: #22c55e;
   }
   .word-btn.copied .word-text {
-    -webkit-background-clip: initial;
-    -webkit-text-fill-color: #22c55e;
-    background-clip: initial;
     color: #22c55e;
   }
 
