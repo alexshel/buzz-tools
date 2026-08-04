@@ -8,8 +8,8 @@
 })(typeof self !== "undefined" ? self : this, function () {
   "use strict";
 
-  // Words shorter than this are never offered (drops the boring "a" / "i").
-  const MIN_WORD_LENGTH = 2;
+  // Words shorter than this are never offered (drops the boring "a" / "i" and obscure 2-letter Scrabble words).
+  const MIN_WORD_LENGTH = 3;
 
   /* letter frequency of a lowercase a-z word, as a 26-slot Uint8Array */
   function count(word) {
