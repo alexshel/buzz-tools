@@ -152,6 +152,66 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+
+  /* Word buttons with copy functionality */
+  .word-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 8px 2px 2px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 120ms ease, transform 80ms ease;
+  }
+  .word-btn:hover,
+  .word-btn:focus-visible {
+    background: var(--accent);
+    color: var(--accent-ink);
+    outline: none;
+  }
+  .word-btn:focus-visible {
+    box-shadow: 0 0 0 2px var(--ring);
+  }
+  .word-btn:active {
+    transform: scale(0.97);
+  }
+  .word-btn .word-text {
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .word-btn:hover .word-text,
+  .word-btn:focus-visible .word-text {
+    -webkit-text-fill-color: var(--accent-ink);
+    background-clip: initial;
+  }
+  .word-btn .copy-icon {
+    flex-shrink: 0;
+    opacity: 0;
+    color: var(--ink-soft);
+    transition: opacity 120ms ease, color 120ms ease;
+  }
+  .word-btn:hover .copy-icon,
+  .word-btn:focus-visible .copy-icon {
+    opacity: 1;
+    color: var(--accent-ink);
+  }
+  .word-btn.copied .copy-icon {
+    opacity: 1;
+    color: #22c55e;
+  }
+  .word-btn.copied .word-text {
+    -webkit-text-fill-color: #22c55e;
+    background-clip: initial;
+  }
+
   #results .meta {
     margin-top: 16px;
     font-size: 0.8rem;
