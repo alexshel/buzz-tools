@@ -1,0 +1,12 @@
+{
+  "name": "Buzz Tools",
+  "tagline": "A small, free set of utilities that run entirely in your browser — no accounts, no installs, and none of your input ever leaves your machine.",
+  "tools": [
+    {
+      "slug": "word-unscrambler",
+      "name": "Word Unscrambler",
+      "description": "Type any set of letters and instantly see every word you can spell with them — longest first, space-separated.",
+      "icon": "\ud83d\udd24"
+    }
+  ]
+}

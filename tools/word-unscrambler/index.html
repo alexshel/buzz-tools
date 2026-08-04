@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Word Unscrambler</title>
+  <link rel="stylesheet" href="../../portal.css">
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --ink: #1c1e21;
+    --ink-soft: #6b7280;
+    --rule: #e5e7eb;
+    --accent: #4f46e5;
+    --accent-hover: #4338ca;
+    --accent-ink: #ffffff;
+    --ring: rgba(79, 70, 229, 0.35);
+    --radius: 16px;
+    --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 8px 24px -12px rgba(16, 24, 40, 0.18);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1115;
+      --card: #1a1d24;
+      --ink: #e7e9ee;
+      --ink-soft: #9aa1ad;
+      --rule: #2a2f3a;
+      --accent: #6d65f0;
+      --accent-hover: #7d76f5;
+      --accent-ink: #ffffff;
+      --ring: rgba(109, 101, 240, 0.4);
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    /* top padding leaves room for the fixed portal header (see portal.css) */
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                 "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    display: grid;
+    place-items: center;
+    padding: 88px 16px 32px;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 640px;
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 40px 40px 32px;
+  }
+
+  h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0 0 8px;
+  }
+  .subtitle {
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin: 0 0 28px;
+  }
+
+  form { display: flex; flex-direction: column; gap: 12px; }
+
+  input {
+    width: 100%;
+    padding: 14px 16px;
+    font-size: 1.15rem;
+    font-weight: 500;
+    text-align: center;
+    letter-spacing: 0.04em;
+    color: var(--ink);
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    outline: none;
+    transition: border-color 120ms ease, box-shadow 120ms ease;
+  }
+  input::placeholder {
+    color: var(--ink-soft);
+    font-weight: 400;
+    letter-spacing: 0;
+    opacity: 0.75;
+  }
+  input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--ring);
+  }
+
+  button {
+    padding: 13px 16px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--accent-ink);
+    background: var(--accent);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 120ms ease;
+  }
+  button:hover { background: var(--accent-hover); }
+  button:disabled { opacity: 0.6; cursor: progress; }
+  button:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  .status {
+    margin: 14px 0 0;
+    font-size: 0.9rem;
+    color: var(--ink-soft);
+    text-align: center;
+  }
+
+  #results { margin-top: 24px; border-top: 1px solid var(--rule); padding-top: 20px; }
+  #results p { margin: 0; }
+  #results .count {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  #results .words {
+    font-size: 1.05rem;
+    line-height: 1.75;
+    word-spacing: 0.4em;
+  }
+  #results .meta {
+    margin-top: 10px;
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+  }
+  #results.empty .words, #results:not(.has-result) .words,
+  #results:not(.has-result) .meta { display: none; }
+
+  .foot {
+    margin: 28px 0 0;
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    text-align: center;
+  }
+
+  @media (max-width: 520px) {
+    .card { padding: 28px 20px 24px; }
+  }
+</style>
+</head>
+<body>
+  <header id="site-header"></header>
+  <main class="card">
+    <h1>Word Unscrambler</h1>
+    <p class="subtitle">Type any set of letters and we&rsquo;ll list every word you can spell with them &mdash; longest first.</p>
+
+    <form id="form" autocomplete="off">
+      <label for="letters" hidden>Letters</label>
+      <input id="letters" name="letters"
+             placeholder="e.g. atc"
+             maxlength="64"
+             spellcheck="false"
+             autocomplete="off"
+             autocapitalize="off"
+             autofocus>
+      <button id="submit" type="submit">Submit</button>
+    </form>
+
+    <p id="status" class="status"></p>
+    <section id="results" aria-live="polite"></section>
+
+    <p class="foot">370k-word dictionary &middot; everything runs in your browser</p>
+  </main>
+
+  <noscript><p style="text-align:center;padding:20px">This tool needs JavaScript enabled.</p></noscript>
+  <script src="unscramble.js"></script>
+  <script>Unscramble.init(document);</script>
+  <script src="../../portal.js"></script>
+</body>
+</html>
