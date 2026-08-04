@@ -76,6 +76,9 @@
       words: document.createElement("p"),
       meta: document.createElement("p")
     };
+    output.count.className = "count";
+    output.words.className = "words";
+    output.meta.className = "meta";
     results.appendChild(output.count);
     results.appendChild(output.words);
     results.appendChild(output.meta);
@@ -89,8 +92,43 @@
       output.count.textContent = n
         ? (n === 1 ? "1 word" : n + " words") + " from “" + letters + "”"
         : "No words can be spelled from those letters.";
-      output.words.textContent = words.join("  ");
+      output.words.innerHTML = words.map(w =>
+        `<button class="word-btn" data-word="${w}" aria-label="Copy ${w}" title="Copy ${w}">
+           <span class="word-text">${w}</span>
+           <svg class="copy-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+             <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+           </svg>
+         </button>`
+      ).join(" ");
       output.meta.textContent = n ? "found in " + ms + " ms" : "";
+
+      // Attach copy handlers
+      output.words.querySelectorAll(".word-btn").forEach(btn => {
+        btn.addEventListener("click", async (e) => {
+          e.preventDefault();
+          const word = btn.dataset.word;
+          try {
+            await navigator.clipboard.writeText(word);
+            btn.classList.add("copied");
+            btn.setAttribute("aria-label", "Copied " + word);
+            setTimeout(() => {
+              btn.classList.remove("copied");
+              btn.setAttribute("aria-label", "Copy " + word);
+            }, 1200);
+          } catch (err) {
+            // Fallback for non-secure contexts
+            const textarea = document.createElement("textarea");
+            textarea.value = word;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand("copy");
+            document.body.removeChild(textarea);
+            btn.classList.add("copied");
+            setTimeout(() => btn.classList.remove("copied"), 1200);
+          }
+        });
+      });
     }
 
     function error(msg) {
