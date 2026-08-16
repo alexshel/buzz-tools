@@ -13,6 +13,12 @@
       "name": "Word Scrambler",
       "description": "Enter any word or phrase and scramble its letters — perfect for puzzles, games, or brain-teasers.",
       "icon": "\ud83d\udd02"
+    },
+    {
+      "slug": "word-to-html",
+      "name": "Word to HTML Converter",
+      "description": "Paste content from Word, Google Docs, or any rich-text source and get clean, semantic HTML — no inline styles, no mso cruft.",
+      "icon": "\u2192"
     }
   ]
 }
