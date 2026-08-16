@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Word to HTML Converter & Cleaner</title>
+<link rel="stylesheet" href="../../portal.css">
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --ink: #1c1e21;
+    --ink-soft: #6b7280;
+    --rule: #e5e7eb;
+    --accent: #4f46e5;
+    --accent-hover: #4338ca;
+    --accent-ink: #ffffff;
+    --ring: rgba(79, 70, 229, 0.35);
+    --radius: 16px;
+    --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 8px 24px -12px rgba(16, 24, 40, 0.18);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1115;
+      --card: #1a1d24;
+      --ink: #e7e9ee;
+      --ink-soft: #9aa1ad;
+      --rule: #2a2f3a;
+      --accent: #6d65f0;
+      --accent-hover: #7d76f5;
+      --accent-ink: #ffffff;
+      --ring: rgba(109, 101, 240, 0.4);
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                 "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    padding: 88px 16px 32px;
+  }
+
+  .split-layout {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+    /* critical: allow grid items to shrink below content width */
+  }
+
+  .split-pane {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 28px 28px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;        /* allow shrinking in grid */
+    overflow: hidden;    /* clip any overflow */
+  }
+
+  .pane-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .pane-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin: 0;
+  }
+  .pane-subtitle {
+    color: var(--ink-soft);
+    font-size: 0.85rem;
+    line-height: 1.4;
+    margin: 0;
+  }
+  .pane-badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--accent-ink);
+    background: var(--accent);
+    padding: 3px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  /* ── mode toggle tabs ── */
+
+  .input-tabs {
+    display: flex;
+    gap: 2px;
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 2px;
+    align-self: flex-start;
+  }
+  .input-tab {
+    padding: 5px 14px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: background 120ms ease, color 120ms ease;
+  }
+  .input-tab:hover { color: var(--ink); }
+  .input-tab.active {
+    background: var(--card);
+    color: var(--ink);
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  }
+
+  /* ── shared input box styling ── */
+
+  .input-box {
+    width: 100%;
+    padding: 16px;
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: var(--ink);
+    background: var(--bg);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    outline: none;
+    height: 340px;
+    max-height: 70vh;
+    transition: border-color 120ms ease, box-shadow 120ms ease;
+    overflow: auto;
+    resize: vertical;
+  }
+  .input-box:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--ring);
+  }
+
+  /* Rich-text (contenteditable) input */
+  #input-richtext {
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    max-width: 100%;
+  }
+  #input-richtext:empty:before {
+    content: attr(data-placeholder);
+    color: var(--ink-soft);
+    opacity: 0.7;
+    pointer-events: none;
+  }
+  /* Constrain pasted elements */
+  #input-richtext * {
+    max-width: 100% !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
+  }
+  #input-richtext img {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+  #input-richtext table {
+    display: block;
+    max-width: 100% !important;
+    overflow: auto;
+    word-break: normal !important;
+  }
+  #input-richtext pre {
+    white-space: pre-wrap !important;
+    overflow-wrap: break-word !important;
+  }
+  /* Revert app button styles on pasted elements */
+  #input-richtext button,
+  #input-richtext input,
+  #input-richtext select,
+  #input-richtext textarea {
+    all: revert;
+    font-family: inherit;
+  }
+
+  /* HTML (textarea) input */
+  #input-html {
+    font-family: "SF Mono", "Cascadia Code", "Consolas", monospace;
+    font-size: 0.85rem;
+    tab-size: 2;
+  }
+
+  .input-box-hidden { display: none; }
+
+  .options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 4px 0;
+  }
+  .options label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    cursor: pointer;
+    user-select: none;
+  }
+  .options input[type="checkbox"] {
+    width: 15px;
+    height: 15px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  button {
+    padding: 11px 20px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--accent-ink);
+    background: var(--accent);
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 120ms ease;
+  }
+  button:hover { background: var(--accent-hover); }
+  button:disabled { opacity: 0.6; cursor: progress; }
+  button:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--accent);
+    padding: 7px 14px;
+    font-weight: 500;
+  }
+  .btn-ghost:hover {
+    background: var(--accent-soft);
+  }
+  .btn-sm {
+    padding: 8px 14px;
+    font-size: 0.85rem;
+  }
+
+  .status {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    min-height: 1.3em;
+  }
+
+  /* ── output ── */
+
+  #output {
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+  }
+  #output.has-result { display: flex; }
+
+  #output-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 340px;
+    color: var(--ink-soft);
+    gap: 8px;
+  }
+  #output.has-result ~ #output-empty { display: none; }
+
+  #output-empty-icon { font-size: 2.4rem; opacity: 0.4; }
+  #output-empty-text {
+    font-size: 0.9rem;
+    max-width: 24ch;
+    line-height: 1.5;
+  }
+
+  #output-html {
+    margin: 0;
+    padding: 14px;
+    background: var(--bg);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    font-family: "SF Mono", "Cascadia Code", "Consolas", monospace;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--ink);
+    max-height: 300px;
+    overflow: auto;
+  }
+
+  #preview {
+    padding: 14px;
+    border: 1px dashed var(--rule);
+    border-radius: 10px;
+    font-size: 0.92rem;
+    line-height: 1.6;
+    max-height: 300px;
+    overflow: auto;
+  }
+  #preview h1, #preview h2, #preview h3,
+  #preview h4, #preview h5, #preview h6 { margin: 0.6em 0 0.3em; }
+  #preview p { margin: 0 0 0.6em; }
+  #preview img { max-width: 100%; height: auto; border-radius: 6px; }
+  #preview a { color: var(--accent); }
+
+  .tabs {
+    display: flex;
+    gap: 2px;
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 2px;
+    align-self: flex-start;
+  }
+  .tab {
+    padding: 5px 14px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: background 120ms ease, color 120ms ease;
+  }
+  .tab:hover { color: var(--ink); }
+  .tab.active {
+    background: var(--card);
+    color: var(--ink);
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  #actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .foot {
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    text-align: center;
+    margin: 24px auto 0;
+    max-width: 1200px;
+  }
+
+  @media (max-width: 800px) {
+    .split-layout {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    .split-pane {
+      padding: 20px;
+    }
+    .input-box { height: 200px; }
+  }
+</style>
+</head>
+<body>
+  <header id="site-header"></header>
+
+  <div class="split-layout">
+
+    <!-- LEFT: Input -->
+    <div class="split-pane">
+      <div>
+        <div class="pane-title">Word to HTML Converter</div>
+        <p class="pane-subtitle">Paste from Word, Google Docs, or any web page. The tool strips inline styles and outputs clean, semantic HTML. Everything stays in your browser.</p>
+      </div>
+
+      <!-- Toggle: Rich Text / HTML -->
+      <div class="input-tabs">
+        <button class="input-tab active" data-mode="richtext">Rich Text</button>
+        <button class="input-tab" data-mode="html">HTML</button>
+      </div>
+
+      <!-- Rich Text input (default) -->
+      <div id="input-richtext" class="input-box"
+           contenteditable="true"
+           data-placeholder="Paste rich text from Word or any web page here — all formatting is preserved. Click Convert to clean it."></div>
+
+      <!-- HTML input (hidden by default) -->
+      <textarea id="input-html" class="input-box input-box-hidden"
+        placeholder="Paste or type raw HTML here to clean it."></textarea>
+
+      <div class="options">
+        <label><input type="checkbox" id="opt-strip-styles" checked> Strip inline styles</label>
+        <label><input type="checkbox" id="opt-strip-classes" checked> Strip classes &amp; IDs</label>
+        <label><input type="checkbox" id="opt-remove-empty" checked> Remove empties</label>
+        <label><input type="checkbox" id="opt-normalize-lists" checked> Fix lists</label>
+      </div>
+
+      <div class="row">
+        <button id="convert-btn" type="button">Convert</button>
+        <button id="clear-input-btn" class="btn-ghost" type="button">Clear</button>
+        <button id="sample-btn" class="btn-ghost" type="button">Load sample</button>
+      </div>
+
+      <p id="status" class="status"></p>
+    </div>
+
+    <!-- RIGHT: Output -->
+    <div class="split-pane">
+      <div class="pane-header">
+        <span class="pane-title">Clean HTML</span>
+        <span class="pane-badge">Preview: <span id="char-count">0</span> chars</span>
+      </div>
+
+      <div id="output-empty">
+        <span id="output-empty-icon">&#8592;</span>
+        <span id="output-empty-text">Paste content on the left and click Convert</span>
+      </div>
+
+      <section id="output" aria-live="polite">
+        <div class="tabs">
+          <button class="tab active" data-tab="source">Source</button>
+          <button class="tab" data-tab="preview">Preview</button>
+        </div>
+        <div class="tab-panel active" id="panel-source">
+          <pre id="output-html"></pre>
+        </div>
+        <div class="tab-panel" id="panel-preview">
+          <div id="preview"></div>
+        </div>
+        <div id="actions">
+          <button id="copy-btn" class="btn-ghost btn-sm" type="button">Copy HTML</button>
+          <button id="clear-btn" class="btn-ghost btn-sm" type="button">Clear</button>
+        </div>
+      </section>
+    </div>
+
+  </div>
+
+  <p class="foot">All processing happens in your browser &middot; nothing you paste is ever sent to a server</p>
+
+  <noscript><p style="text-align:center;padding:20px">This tool needs JavaScript enabled.</p></noscript>
+  <script src="word-to-html.js"></script>
+  <script>WordToHTML.init(document);</script>
+  <script src="../../portal.js"></script>
+</body>
+</html>
