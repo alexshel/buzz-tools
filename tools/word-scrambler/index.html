@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Word Scrambler</title>
+<link rel="stylesheet" href="../../portal.css">
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --ink: #1c1e21;
+    --ink-soft: #6b7280;
+    --rule: #e5e7eb;
+    --accent: #4f46e5;
+    --accent-hover: #4338ca;
+    --accent-ink: #ffffff;
+    --ring: rgba(79, 70, 229, 0.35);
+    --radius: 16px;
+    --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 8px 24px -12px rgba(16, 24, 40, 0.18);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1115;
+      --card: #1a1d24;
+      --ink: #e7e9ee;
+      --ink-soft: #9aa1ad;
+      --rule: #2a2f3a;
+      --accent: #6d65f0;
+      --accent-hover: #7d76f5;
+      --accent-ink: #ffffff;
+      --ring: rgba(109, 101, 240, 0.4);
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                 "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    display: grid;
+    place-items: center;
+    padding: 88px 16px 32px;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 640px;
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 40px 40px 32px;
+  }
+
+  h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0 0 8px;
+  }
+  .subtitle {
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin: 0 0 28px;
+  }
+
+  form { display: flex; flex-direction: column; gap: 12px; }
+
+  textarea {
+    width: 100%;
+    padding: 14px 16px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--ink);
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    outline: none;
+    resize: vertical;
+    min-height: 80px;
+    font-family: inherit;
+    transition: border-color 120ms ease, box-shadow 120ms ease;
+  }
+  textarea::placeholder {
+    color: var(--ink-soft);
+    font-weight: 400;
+    opacity: 0.75;
+  }
+  textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--ring);
+  }
+
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+
+  button {
+    padding: 13px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--accent-ink);
+    background: var(--accent);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 120ms ease;
+  }
+  button:hover { background: var(--accent-hover); }
+  button:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--accent);
+    padding: 8px 16px;
+    font-weight: 500;
+  }
+  .btn-ghost:hover {
+    background: var(--accent-soft);
+  }
+
+  label.check-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.92rem;
+    color: var(--ink-soft);
+    cursor: pointer;
+    user-select: none;
+  }
+  label.check-row input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  #output {
+    margin-top: 24px;
+    border-top: 1px solid var(--rule);
+    padding-top: 20px;
+    display: none;
+    flex-direction: column;
+    gap: 14px;
+  }
+  #output.has-result { display: flex; }
+
+  #result-text {
+    margin: 0;
+    font-size: 1.4rem;
+    line-height: 1.6;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    word-break: break-word;
+    color: var(--ink);
+  }
+
+  #actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .foot {
+    margin: 28px 0 0;
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    text-align: center;
+  }
+
+  @media (max-width: 520px) {
+    .card { padding: 28px 20px 24px; }
+    #result-text { font-size: 1.2rem; }
+  }
+</style>
+</head>
+<body>
+  <header id="site-header"></header>
+  <main class="card">
+    <h1>Word Scrambler</h1>
+    <p class="subtitle">Enter any word or phrase and we&rsquo;ll scramble the letters &mdash; great for puzzles, games, or a quick brain-teaser.</p>
+
+    <form id="form" autocomplete="off">
+      <label for="phrase" hidden>Phrase</label>
+      <textarea id="phrase" name="phrase"
+                placeholder="e.g. the quick brown fox"
+                spellcheck="false"
+                autocomplete="off"
+                maxlength="500"></textarea>
+
+      <div class="row">
+        <button id="submit" type="submit">Scramble</button>
+        <label class="check-row">
+          <input type="checkbox" id="keep-ends" checked>
+          Keep first &amp; last letter
+        </label>
+      </div>
+    </form>
+
+    <section id="output" aria-live="polite">
+      <p id="result-text"></p>
+      <div id="actions">
+        <button id="rescramble" class="btn-ghost" type="button">&#x21bb;&nbsp; Re-scramble</button>
+        <button id="copy-btn" class="btn-ghost" type="button">Copy</button>
+      </div>
+    </section>
+
+    <p class="foot">All scrambling happens in your browser &middot; nothing is sent to a server</p>
+  </main>
+
+  <noscript><p style="text-align:center;padding:20px">This tool needs JavaScript enabled.</p></noscript>
+  <script src="scramble.js"></script>
+  <script>Scramble.init(document);</script>
+  <script src="../../portal.js"></script>
+</body>
+</html>

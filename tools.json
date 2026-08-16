@@ -7,6 +7,12 @@
       "name": "Word Unscrambler",
       "description": "Type any set of letters and instantly see every word you can spell with them — longest first, space-separated.",
       "icon": "\ud83d\udd24"
+    },
+    {
+      "slug": "word-scrambler",
+      "name": "Word Scrambler",
+      "description": "Enter any word or phrase and scramble its letters — perfect for puzzles, games, or brain-teasers.",
+      "icon": "\ud83d\udd02"
     }
   ]
 }
