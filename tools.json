@@ -6,19 +6,36 @@
       "slug": "word-unscrambler",
       "name": "Word Unscrambler",
       "description": "Type any set of letters and instantly see every word you can spell with them — longest first, space-separated.",
-      "icon": "\ud83d\udd24"
+      "icon": "\ud83d\udd24",
+      "category": "Word Puzzles & Games"
     },
     {
       "slug": "word-scrambler",
       "name": "Word Scrambler",
       "description": "Enter any word or phrase and scramble its letters — perfect for puzzles, games, or brain-teasers.",
-      "icon": "\ud83d\udd02"
+      "icon": "\ud83d\udd02",
+      "category": "Word Puzzles & Games"
     },
     {
       "slug": "word-to-html",
       "name": "Word to HTML Converter",
       "description": "Paste content from Word, Google Docs, or any rich-text source and get clean, semantic HTML — no inline styles, no mso cruft.",
-      "icon": "\u2192"
+      "icon": "\u2192",
+      "category": "Converters"
+    },
+    {
+      "slug": "sample-size-calculator",
+      "name": "Sample Size Calculator",
+      "description": "Determine the minimum sample size needed for surveys and experiments — with optional finite population correction.",
+      "icon": "\ud83d\udcca",
+      "category": "Data & Analytics"
+    },
+    {
+      "slug": "margin-of-error",
+      "name": "Margin of Error Calculator",
+      "description": "Calculate the margin of error and confidence interval for survey results and sample data.",
+      "icon": "\u00b1",
+      "category": "Data & Analytics"
     }
   ]
 }

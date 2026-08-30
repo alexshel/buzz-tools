@@ -38,6 +38,22 @@
     return node;
   }
 
+  /* Group tools by category, preserving order of first appearance. */
+  function groupByCategory(tools) {
+    var groups = [];
+    var seen = Object.create(null);
+    for (var i = 0; i < tools.length; i++) {
+      var t = tools[i];
+      var cat = t.category || "Other";
+      if (!seen[cat]) {
+        seen[cat] = true;
+        groups.push({ name: cat, tools: [] });
+      }
+      groups[groups.length - 1].tools.push(t);
+    }
+    return groups;
+  }
+
   /* is this tool the page we're on? (normalize trailing slashes) */
   function isCurrent(href) {
     try {
@@ -57,29 +73,153 @@
     title.setAttribute("aria-label", manifest.name + " — portal home");
     inner.appendChild(title);
 
-    const nav = el("nav", "site-nav");
+    var groups = groupByCategory(manifest.tools);
+
+    /* ---- desktop mega-menu nav ---- */
+    const nav = el("nav", "site-nav-mega");
     nav.setAttribute("aria-label", "Tools");
-    for (const tool of manifest.tools) {
-      const href = root + "tools/" + tool.slug + "/";
-      const link = el("a", "nav-link", tool.name);
-      link.href = href;
-      if (isCurrent(href)) link.classList.add("active");
-      nav.appendChild(link);
+    for (var g = 0; g < groups.length; g++) {
+      var group = groups[g];
+      var item = el("div", "mega-item");
+      var trigger = el("button", "mega-trigger", group.name);
+
+      var dropdown = el("div", "mega-dropdown");
+      for (var i = 0; i < group.tools.length; i++) {
+        var tool = group.tools[i];
+        var href = root + "tools/" + tool.slug + "/";
+        var link = el("a", "mega-link", tool.name);
+        link.href = href;
+        if (isCurrent(href)) {
+          link.classList.add("active");
+        }
+        dropdown.appendChild(link);
+      }
+
+      trigger.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var clickedItem = this.closest(".mega-item");
+        var isOpen = clickedItem.classList.contains("open");
+
+        /* close all other mega-items */
+        var allItems = nav.querySelectorAll(".mega-item");
+        for (var i = 0; i < allItems.length; i++) {
+          allItems[i].classList.remove("open");
+        }
+
+        /* toggle this one */
+        if (!isOpen) {
+          clickedItem.classList.add("open");
+        }
+      });
+
+      item.appendChild(trigger);
+      item.appendChild(dropdown);
+      nav.appendChild(item);
     }
     inner.appendChild(nav);
+
+    /* ---- hamburger + mobile drawer ---- */
+    var ham = el("button", "hamburger");
+    ham.setAttribute("aria-label", "Toggle tools menu");
+    ham.setAttribute("aria-expanded", "false");
+    ham.appendChild(el("span", "hamburger-line"));
+    ham.appendChild(el("span", "hamburger-line"));
+    ham.appendChild(el("span", "hamburger-line"));
+
+    var mobileNav = el("nav", "site-nav-mobile");
+    mobileNav.setAttribute("aria-label", "Tools (mobile)");
+    for (var g = 0; g < groups.length; g++) {
+      var group = groups[g];
+      var cat = el("div", "mobile-category");
+      var mobTrigger = el("button", "mobile-trigger", group.name);
+
+      var mobDropdown = el("div", "mobile-dropdown");
+      for (var i = 0; i < group.tools.length; i++) {
+        var tool = group.tools[i];
+        var href = root + "tools/" + tool.slug + "/";
+        var link = el("a", "mobile-link", tool.name);
+        link.href = href;
+        if (isCurrent(href)) {
+          link.classList.add("active");
+          cat.classList.add("open");
+          mobTrigger.classList.add("open");
+        }
+        mobDropdown.appendChild(link);
+      }
+
+      mobTrigger.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var cat = this.parentNode;
+        cat.classList.toggle("open");
+        this.classList.toggle("open");
+      });
+
+      cat.appendChild(mobTrigger);
+      cat.appendChild(mobDropdown);
+      mobileNav.appendChild(cat);
+    }
+
+    /* hamburger toggle */
+    ham.addEventListener("click", function (e) {
+      e.stopPropagation();
+      mobileNav.classList.toggle("open");
+      ham.classList.toggle("open");
+      var expanded = mobileNav.classList.contains("open") ? "true" : "false";
+      ham.setAttribute("aria-expanded", expanded);
+    });
+
+    /* close mobile nav when a link is clicked */
+    mobileNav.addEventListener("click", function (e) {
+      if (e.target.tagName === "A") {
+        mobileNav.classList.remove("open");
+        ham.classList.remove("open");
+        ham.setAttribute("aria-expanded", "false");
+      }
+    });
+
+    /* close everything when clicking outside the header */
+    document.addEventListener("click", function (e) {
+      if (!inner.contains(e.target)) {
+        /* close desktop mega-items */
+        var openItems = nav.querySelectorAll(".mega-item.open");
+        for (var i = 0; i < openItems.length; i++) {
+          openItems[i].classList.remove("open");
+        }
+        /* close mobile nav */
+        if (mobileNav.classList.contains("open")) {
+          mobileNav.classList.remove("open");
+          ham.classList.remove("open");
+          ham.setAttribute("aria-expanded", "false");
+        }
+      }
+    });
+
+    inner.appendChild(ham);
+    inner.appendChild(mobileNav);
     header.appendChild(inner);
   }
 
   function renderGrid(manifest) {
     if (!grid) return;
-    for (const tool of manifest.tools) {
-      const card = el("a", "tool-card");
-      card.href = root + "tools/" + tool.slug + "/";
-      card.appendChild(el("span", "tool-icon", tool.icon || "\uD83E\uDDF0"));
-      card.appendChild(el("h2", "tool-name", tool.name));
-      card.appendChild(el("p", "tool-desc", tool.description));
-      card.appendChild(el("span", "tool-go", "Open tool \u2192"));
-      grid.appendChild(card);
+    var groups = groupByCategory(manifest.tools);
+    for (var g = 0; g < groups.length; g++) {
+      var group = groups[g];
+      var section = el("div", "category-section");
+      var heading = el("h2", "category-heading", group.name);
+      section.appendChild(heading);
+      var subgrid = el("div", "category-grid");
+      for (var i = 0; i < group.tools.length; i++) {
+        var tool = group.tools[i];
+        var card = el("a", "tool-card");
+        card.href = root + "tools/" + tool.slug + "/";
+        card.appendChild(el("span", "tool-icon", tool.icon || "\uD83E\uDDF0"));
+        card.appendChild(el("h2", "tool-name", tool.name));
+        card.appendChild(el("p", "tool-desc", tool.description));
+        card.appendChild(el("span", "tool-go", "Open tool \u2192"));
+        subgrid.appendChild(card);
+      }
+      section.appendChild(subgrid);
+      grid.appendChild(section);
     }
   }
 

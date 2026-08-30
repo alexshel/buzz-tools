@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sample Size Calculator</title>
+<link rel="stylesheet" href="../../portal.css">
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --card: #ffffff;
+    --ink: #1c1e21;
+    --ink-soft: #6b7280;
+    --rule: #e5e7eb;
+    --accent: #4f46e5;
+    --accent-hover: #4338ca;
+    --accent-ink: #ffffff;
+    --ring: rgba(79, 70, 229, 0.35);
+    --radius: 16px;
+    --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 8px 24px -12px rgba(16, 24, 40, 0.18);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1115;
+      --card: #1a1d24;
+      --ink: #e7e9ee;
+      --ink-soft: #9aa1ad;
+      --rule: #2a2f3a;
+      --accent: #6d65f0;
+      --accent-hover: #7d76f5;
+      --accent-ink: #ffffff;
+      --ring: rgba(109, 101, 240, 0.4);
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                 "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    display: grid;
+    place-items: center;
+    padding: 88px 16px 32px;
+  }
+  .card {
+    width: 100%;
+    max-width: 640px;
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 40px 40px 32px;
+  }
+  h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0 0 8px;
+  }
+  .subtitle {
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin: 0 0 28px;
+  }
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .form-grid .full-width { grid-column: 1 / -1; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    letter-spacing: -0.01em;
+  }
+  .field input, .field select {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 0.95rem;
+    color: var(--ink);
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    outline: none;
+    font-family: inherit;
+    transition: border-color 120ms ease, box-shadow 120ms ease;
+  }
+  .field input:focus, .field select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--ring);
+  }
+  .field input::placeholder { color: var(--ink-soft); opacity: 0.6; }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-top: 4px;
+  }
+  button {
+    padding: 13px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--accent-ink);
+    background: var(--accent);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 120ms ease;
+  }
+  button:hover { background: var(--accent-hover); }
+  button:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  .btn-ghost {
+    background: transparent;
+    color: var(--accent);
+    padding: 8px 16px;
+    font-weight: 500;
+  }
+  .btn-ghost:hover { background: var(--accent-soft); }
+  #output {
+    margin-top: 24px;
+    border-top: 1px solid var(--rule);
+    padding-top: 20px;
+    display: none;
+    flex-direction: column;
+    gap: 14px;
+  }
+  #output.has-result { display: flex; }
+  .result-big {
+    margin: 0;
+    font-size: 2.2rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    color: var(--accent);
+  }
+  .result-label {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+  }
+  .result-note {
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: var(--ink-soft);
+  }
+  .result-details {
+    margin: 0;
+    padding: 12px 16px;
+    background: var(--bg);
+    border-radius: 10px;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: var(--ink-soft);
+  }
+  .result-details strong { color: var(--ink); }
+  .foot {
+    margin: 28px 0 0;
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    text-align: center;
+  }
+  @media (max-width: 520px) {
+    .card { padding: 28px 20px 24px; }
+    .form-grid { grid-template-columns: 1fr; }
+    .result-big { font-size: 1.8rem; }
+  }
+</style>
+</head>
+<body>
+  <header id="site-header"></header>
+  <main class="card">
+    <h1>Sample Size Calculator</h1>
+    <p class="subtitle">Determine the minimum sample size needed for your survey or experiment to achieve statistically significant results.</p>
+
+    <form id="form" autocomplete="off">
+      <div class="form-grid">
+        <div class="field">
+          <label for="confidence">Confidence Level</label>
+          <select id="confidence">
+            <option value="80">80%</option>
+            <option value="85">85%</option>
+            <option value="90">90%</option>
+            <option value="95" selected>95%</option>
+            <option value="99">99%</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="margin">Margin of Error (%)</label>
+          <input id="margin" type="number" value="5" min="0.1" max="100" step="0.1">
+        </div>
+        <div class="field full-width">
+          <label for="population">Population Size (optional)</label>
+          <input id="population" type="number" placeholder="Leave empty for unlimited population" min="1" step="1">
+        </div>
+        <div class="field full-width">
+          <label for="proportion">Estimated Proportion (%)</label>
+          <input id="proportion" type="number" value="50" min="1" max="99" step="1">
+          <span style="font-size:0.78rem;color:var(--ink-soft);margin-top:2px;">50% gives the largest sample size — adjust if you have a prior estimate.</span>
+        </div>
+      </div>
+      <div class="row">
+        <button id="submit" type="submit">Calculate</button>
+        <button id="clear-btn" class="btn-ghost" type="button">Clear</button>
+      </div>
+    </form>
+
+    <section id="output" aria-live="polite">
+      <div>
+        <span class="result-label">Recommended sample size</span>
+        <p id="result-value" class="result-big"></p>
+      </div>
+      <p id="result-note" class="result-note"></p>
+      <pre id="result-details" class="result-details"></pre>
+    </section>
+
+    <p class="foot">All calculations happen in your browser &middot; no data is sent to a server</p>
+  </main>
+
+  <noscript><p style="text-align:center;padding:20px">This tool needs JavaScript enabled.</p></noscript>
+  <script src="sample-size.js"></script>
+  <script>SampleSize.init(document);</script>
+  <script src="../../portal.js"></script>
+</body>
+</html>
