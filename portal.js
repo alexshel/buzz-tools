@@ -38,6 +38,22 @@
     return node;
   }
 
+  /* Group tools by category, preserving order of first appearance. */
+  function groupByCategory(tools) {
+    var groups = [];
+    var seen = Object.create(null);
+    for (var i = 0; i < tools.length; i++) {
+      var t = tools[i];
+      var cat = t.category || "Other";
+      if (!seen[cat]) {
+        seen[cat] = true;
+        groups.push({ name: cat, tools: [] });
+      }
+      groups[groups.length - 1].tools.push(t);
+    }
+    return groups;
+  }
+
   /* is this tool the page we're on? (normalize trailing slashes) */
   function isCurrent(href) {
     try {
@@ -59,12 +75,22 @@
 
     const nav = el("nav", "site-nav");
     nav.setAttribute("aria-label", "Tools");
-    for (const tool of manifest.tools) {
-      const href = root + "tools/" + tool.slug + "/";
-      const link = el("a", "nav-link", tool.name);
-      link.href = href;
-      if (isCurrent(href)) link.classList.add("active");
-      nav.appendChild(link);
+    var groups = groupByCategory(manifest.tools);
+    for (var g = 0; g < groups.length; g++) {
+      var group = groups[g];
+      if (g > 0) {
+        nav.appendChild(el("span", "nav-sep"));
+      }
+      var catLabel = el("span", "nav-category", group.name);
+      nav.appendChild(catLabel);
+      for (var i = 0; i < group.tools.length; i++) {
+        var tool = group.tools[i];
+        var href = root + "tools/" + tool.slug + "/";
+        var link = el("a", "nav-link", tool.name);
+        link.href = href;
+        if (isCurrent(href)) link.classList.add("active");
+        nav.appendChild(link);
+      }
     }
     inner.appendChild(nav);
     header.appendChild(inner);
@@ -72,14 +98,25 @@
 
   function renderGrid(manifest) {
     if (!grid) return;
-    for (const tool of manifest.tools) {
-      const card = el("a", "tool-card");
-      card.href = root + "tools/" + tool.slug + "/";
-      card.appendChild(el("span", "tool-icon", tool.icon || "\uD83E\uDDF0"));
-      card.appendChild(el("h2", "tool-name", tool.name));
-      card.appendChild(el("p", "tool-desc", tool.description));
-      card.appendChild(el("span", "tool-go", "Open tool \u2192"));
-      grid.appendChild(card);
+    var groups = groupByCategory(manifest.tools);
+    for (var g = 0; g < groups.length; g++) {
+      var group = groups[g];
+      var section = el("div", "category-section");
+      var heading = el("h2", "category-heading", group.name);
+      section.appendChild(heading);
+      var subgrid = el("div", "category-grid");
+      for (var i = 0; i < group.tools.length; i++) {
+        var tool = group.tools[i];
+        var card = el("a", "tool-card");
+        card.href = root + "tools/" + tool.slug + "/";
+        card.appendChild(el("span", "tool-icon", tool.icon || "\uD83E\uDDF0"));
+        card.appendChild(el("h2", "tool-name", tool.name));
+        card.appendChild(el("p", "tool-desc", tool.description));
+        card.appendChild(el("span", "tool-go", "Open tool \u2192"));
+        subgrid.appendChild(card);
+      }
+      section.appendChild(subgrid);
+      grid.appendChild(section);
     }
   }
 

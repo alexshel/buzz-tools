@@ -77,13 +77,32 @@ body {
 .site-nav {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   overflow-x: auto;
   scrollbar-width: none;
 }
 .site-nav::-webkit-scrollbar { display: none; }
+.nav-category {
+  padding: 6px 8px 6px 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+  opacity: 0.55;
+  white-space: nowrap;
+  user-select: none;
+}
+.nav-sep {
+  display: inline-block;
+  width: 1px;
+  height: 20px;
+  background: var(--rule);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
 .nav-link {
-  padding: 6px 12px;
+  padding: 6px 10px;
   font-size: 0.92rem;
   font-weight: 500;
   color: var(--ink-soft);
@@ -122,6 +141,24 @@ body {
 }
 
 .tool-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+.category-section { margin-bottom: 28px; }
+.category-section:last-child { margin-bottom: 0; }
+.category-heading {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-soft);
+  opacity: 0.55;
+  margin: 0 0 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--rule);
+}
+.category-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 16px;
