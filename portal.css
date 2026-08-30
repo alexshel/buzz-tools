@@ -89,7 +89,7 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--ink-soft);
-  opacity: 0.55;
+  opacity: 0.65;
   white-space: nowrap;
   user-select: none;
 }
@@ -116,6 +116,97 @@ body {
   color: var(--accent);
   background: var(--accent-soft);
   font-weight: 600;
+}
+
+/* ---- hamburger menu ---- */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--ink-soft);
+  transition: background 120ms ease, color 120ms ease;
+  flex-shrink: 0;
+}
+.hamburger:hover { background: var(--accent-soft); color: var(--ink); }
+.hamburger:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.hamburger-line {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: currentColor;
+  border-radius: 2px;
+  transition: transform 200ms ease, opacity 200ms ease;
+}
+.hamburger-line + .hamburger-line { margin-top: 5px; }
+.hamburger.open .hamburger-line:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+.hamburger.open .hamburger-line:nth-child(2) {
+  opacity: 0;
+}
+.hamburger.open .hamburger-line:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* ---- mobile nav drawer ---- */
+@media (max-width: 880px) {
+  .hamburger { display: flex; }
+
+  .site-nav {
+    display: none;
+    position: absolute;
+    top: var(--header-h);
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: 8px 0 12px;
+    background: var(--card);
+    border-bottom: 1px solid var(--rule);
+    box-shadow: 0 8px 24px -12px rgba(16, 24, 40, 0.24);
+    overflow-y: auto;
+    max-height: calc(100vh - var(--header-h));
+    z-index: 99;
+  }
+  .site-nav.open { display: flex; }
+
+  .site-nav .nav-category {
+    padding: 10px 20px 4px;
+    font-size: 0.7rem;
+    opacity: 0.5;
+  }
+  .site-nav .nav-sep { display: none; }
+
+  .site-nav .nav-link {
+    padding: 8px 20px;
+    border-radius: 0;
+    font-size: 0.95rem;
+    white-space: normal;
+  }
+  .site-nav .nav-link:hover { background: var(--accent-soft); }
+  .site-nav .nav-link.active { background: var(--accent-soft); }
+
+  .site-header-inner { position: relative; }
+}
+
+/* ---- desktop nav overflow hint ---- */
+@media (min-width: 881px) {
+  .site-nav {
+    mask-image: linear-gradient(to right, #000 95%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, #000 95%, transparent 100%);
+  }
 }
 
 /* ---- portal home ---- */

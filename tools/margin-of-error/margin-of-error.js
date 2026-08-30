@@ -11,8 +11,8 @@
 (function () {
   "use strict";
 
-  var Z = { 90: 1.645, 95: 1.96, 99: 2.576 };
-  var CONFIDENCE_LABELS = { 90: "90%", 95: "95%", 99: "99%" };
+  var Z = { 80: 1.282, 85: 1.440, 90: 1.645, 95: 1.96, 99: 2.576 };
+  var CONFIDENCE_LABELS = { 80: "80%", 85: "85%", 90: "90%", 95: "95%", 99: "99%" };
 
   function calc(conf, n, propPct, pop) {
     var z = Z[conf];

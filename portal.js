@@ -93,6 +93,39 @@
       }
     }
     inner.appendChild(nav);
+
+    /* hamburger button (visible only on mobile via CSS) */
+    var ham = el("button", "hamburger");
+    ham.setAttribute("aria-label", "Toggle tools menu");
+    ham.setAttribute("aria-expanded", "false");
+    ham.appendChild(el("span", "hamburger-line"));
+    ham.appendChild(el("span", "hamburger-line"));
+    ham.appendChild(el("span", "hamburger-line"));
+    ham.addEventListener("click", function (e) {
+      e.stopPropagation();
+      nav.classList.toggle("open");
+      ham.classList.toggle("open");
+      var expanded = nav.classList.contains("open") ? "true" : "false";
+      ham.setAttribute("aria-expanded", expanded);
+    });
+    /* close nav when a link is clicked */
+    nav.addEventListener("click", function (e) {
+      if (e.target.tagName === "A") {
+        nav.classList.remove("open");
+        ham.classList.remove("open");
+        ham.setAttribute("aria-expanded", "false");
+      }
+    });
+    /* close nav when clicking outside */
+    document.addEventListener("click", function (e) {
+      if (nav.classList.contains("open") && !inner.contains(e.target)) {
+        nav.classList.remove("open");
+        ham.classList.remove("open");
+        ham.setAttribute("aria-expanded", "false");
+      }
+    });
+    inner.appendChild(ham);
+
     header.appendChild(inner);
   }
 
