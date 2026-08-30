@@ -141,6 +141,8 @@
         link.href = href;
         if (isCurrent(href)) {
           link.classList.add("active");
+          cat.classList.add("open");
+          mobTrigger.classList.add("open");
         }
         mobDropdown.appendChild(link);
       }
