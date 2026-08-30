@@ -84,6 +84,15 @@ body {
 .mega-item {
   position: relative;
 }
+/* hover bridge — invisible strip bridging trigger → dropdown gap */
+.mega-item::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 6px;
+}
 .mega-trigger {
   padding: 6px 12px 6px 14px;
   font-size: 0.92rem;
