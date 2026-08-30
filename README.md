@@ -38,11 +38,14 @@ Two steps, no per-page edits anywhere else:
      "slug": "word-unscrambler",
      "name": "Word Unscrambler",
      "description": "Type any set of letters and see every word you can spell — longest first.",
-     "icon": "🔤"
+     "icon": "🔤",
+     "category": "Word Puzzles & Games"
    }
    ```
 
-   The header nav and the home-page grid pick the new tool up automatically.
+   The `category` field groups tools in the header nav and the home-page grid.
+   Use an existing category name to add to that group, or create a new one.
+   The portal groups automatically by category — no config changes needed elsewhere.
 
 For the tool page to show the shared shell, include three lines in its
 `index.html`:
