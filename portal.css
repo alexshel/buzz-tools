@@ -160,7 +160,7 @@ body {
 }
 
 /* ---- mobile nav drawer ---- */
-@media (max-width: 880px) {
+@media (max-width: 1100px) {
   .hamburger { display: flex; }
 
   .site-nav {
@@ -202,7 +202,7 @@ body {
 }
 
 /* ---- desktop nav overflow hint ---- */
-@media (min-width: 881px) {
+@media (min-width: 1101px) {
   .site-nav {
     mask-image: linear-gradient(to right, #000 95%, transparent 100%);
     -webkit-mask-image: linear-gradient(to right, #000 95%, transparent 100%);
