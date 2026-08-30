@@ -73,20 +73,15 @@
     title.setAttribute("aria-label", manifest.name + " — portal home");
     inner.appendChild(title);
 
+    var groups = groupByCategory(manifest.tools);
+
+    /* ---- desktop mega-menu nav ---- */
     const nav = el("nav", "site-nav-mega");
     nav.setAttribute("aria-label", "Tools");
-    var groups = groupByCategory(manifest.tools);
     for (var g = 0; g < groups.length; g++) {
       var group = groups[g];
       var item = el("div", "mega-item");
-
       var trigger = el("button", "mega-trigger", group.name);
-      trigger.setAttribute("aria-expanded", "false");
-      trigger.addEventListener("click", function (e) {
-        e.stopPropagation();
-        var expanded = this.getAttribute("aria-expanded") === "true" ? "false" : "true";
-        this.setAttribute("aria-expanded", expanded);
-      });
 
       var dropdown = el("div", "mega-dropdown");
       for (var i = 0; i < group.tools.length; i++) {
@@ -96,10 +91,27 @@
         link.href = href;
         if (isCurrent(href)) {
           link.classList.add("active");
-          trigger.setAttribute("aria-expanded", "true");
+          item.classList.add("open");
         }
         dropdown.appendChild(link);
       }
+
+      trigger.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var clickedItem = this.closest(".mega-item");
+        var isOpen = clickedItem.classList.contains("open");
+
+        /* close all other mega-items */
+        var allItems = nav.querySelectorAll(".mega-item");
+        for (var i = 0; i < allItems.length; i++) {
+          allItems[i].classList.remove("open");
+        }
+
+        /* toggle this one */
+        if (!isOpen) {
+          clickedItem.classList.add("open");
+        }
+      });
 
       item.appendChild(trigger);
       item.appendChild(dropdown);
@@ -107,17 +119,84 @@
     }
     inner.appendChild(nav);
 
-    /* close mega-menus when clicking outside */
+    /* ---- hamburger + mobile drawer ---- */
+    var ham = el("button", "hamburger");
+    ham.setAttribute("aria-label", "Toggle tools menu");
+    ham.setAttribute("aria-expanded", "false");
+    ham.appendChild(el("span", "hamburger-line"));
+    ham.appendChild(el("span", "hamburger-line"));
+    ham.appendChild(el("span", "hamburger-line"));
+
+    var mobileNav = el("nav", "site-nav-mobile");
+    mobileNav.setAttribute("aria-label", "Tools (mobile)");
+    for (var g = 0; g < groups.length; g++) {
+      var group = groups[g];
+      var cat = el("div", "mobile-category");
+      var mobTrigger = el("button", "mobile-trigger", group.name);
+
+      var mobDropdown = el("div", "mobile-dropdown");
+      for (var i = 0; i < group.tools.length; i++) {
+        var tool = group.tools[i];
+        var href = root + "tools/" + tool.slug + "/";
+        var link = el("a", "mobile-link", tool.name);
+        link.href = href;
+        if (isCurrent(href)) {
+          link.classList.add("active");
+          cat.classList.add("open");
+          mobTrigger.classList.add("open");
+        }
+        mobDropdown.appendChild(link);
+      }
+
+      mobTrigger.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var cat = this.parentNode;
+        cat.classList.toggle("open");
+        this.classList.toggle("open");
+      });
+
+      cat.appendChild(mobTrigger);
+      cat.appendChild(mobDropdown);
+      mobileNav.appendChild(cat);
+    }
+
+    /* hamburger toggle */
+    ham.addEventListener("click", function (e) {
+      e.stopPropagation();
+      mobileNav.classList.toggle("open");
+      ham.classList.toggle("open");
+      var expanded = mobileNav.classList.contains("open") ? "true" : "false";
+      ham.setAttribute("aria-expanded", expanded);
+    });
+
+    /* close mobile nav when a link is clicked */
+    mobileNav.addEventListener("click", function (e) {
+      if (e.target.tagName === "A") {
+        mobileNav.classList.remove("open");
+        ham.classList.remove("open");
+        ham.setAttribute("aria-expanded", "false");
+      }
+    });
+
+    /* close everything when clicking outside the header */
     document.addEventListener("click", function (e) {
-      var triggers = nav.querySelectorAll(".mega-trigger");
-      for (var i = 0; i < triggers.length; i++) {
-        var item = triggers[i].closest(".mega-item");
-        if (!item.contains(e.target)) {
-          triggers[i].setAttribute("aria-expanded", "false");
+      if (!inner.contains(e.target)) {
+        /* close desktop mega-items */
+        var openItems = nav.querySelectorAll(".mega-item.open");
+        for (var i = 0; i < openItems.length; i++) {
+          openItems[i].classList.remove("open");
+        }
+        /* close mobile nav */
+        if (mobileNav.classList.contains("open")) {
+          mobileNav.classList.remove("open");
+          ham.classList.remove("open");
+          ham.setAttribute("aria-expanded", "false");
         }
       }
     });
 
+    inner.appendChild(ham);
+    inner.appendChild(mobileNav);
     header.appendChild(inner);
   }
 
