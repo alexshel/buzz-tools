@@ -74,138 +74,91 @@ body {
   white-space: nowrap;
 }
 .site-title:hover { color: var(--accent); }
-.site-nav {
+
+/* ---- mega-menu nav ---- */
+.site-nav-mega {
   display: flex;
-  align-items: center;
-  gap: 2px;
-  overflow-x: auto;
-  scrollbar-width: none;
+  align-items: stretch;
+  gap: 4px;
 }
-.site-nav::-webkit-scrollbar { display: none; }
-.nav-category {
-  padding: 6px 8px 6px 12px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--ink-soft);
-  opacity: 0.65;
-  white-space: nowrap;
-  user-select: none;
+.mega-item {
+  position: relative;
 }
-.nav-sep {
-  display: inline-block;
-  width: 1px;
-  height: 20px;
-  background: var(--rule);
-  margin: 0 4px;
-  flex-shrink: 0;
-}
-.nav-link {
-  padding: 6px 10px;
+.mega-trigger {
+  padding: 6px 12px 6px 14px;
   font-size: 0.92rem;
   font-weight: 500;
   color: var(--ink-soft);
-  text-decoration: none;
+  background: none;
+  border: none;
   border-radius: 999px;
+  cursor: pointer;
+  font-family: inherit;
   white-space: nowrap;
   transition: color 120ms ease, background 120ms ease;
 }
-.nav-link:hover { color: var(--ink); background: var(--accent-soft); }
-.nav-link.active {
-  color: var(--accent);
+.mega-trigger:hover,
+.mega-trigger:focus-visible,
+.mega-trigger[aria-expanded="true"] {
+  color: var(--ink);
   background: var(--accent-soft);
-  font-weight: 600;
+}
+.mega-trigger::after {
+  content: "\25BE";
+  display: inline-block;
+  margin-left: 5px;
+  font-size: 0.65em;
+  opacity: 0.5;
+  transition: transform 160ms ease;
+}
+.mega-trigger[aria-expanded="true"]::after {
+  transform: rotate(180deg);
 }
 
-/* ---- hamburger menu ---- */
-.hamburger {
+.mega-dropdown {
   display: none;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  background: none;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  color: var(--ink-soft);
-  transition: background 120ms ease, color 120ms ease;
-  flex-shrink: 0;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 200px;
+  padding: 8px 0;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px -12px rgba(16, 24, 40, 0.24);
+  z-index: 200;
 }
-.hamburger:hover { background: var(--accent-soft); color: var(--ink); }
-.hamburger:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
-}
-.hamburger-line {
+.mega-item:hover .mega-dropdown,
+.mega-trigger[aria-expanded="true"] + .mega-dropdown,
+.mega-dropdown:hover {
   display: block;
-  width: 20px;
-  height: 2px;
-  background: currentColor;
-  border-radius: 2px;
-  transition: transform 200ms ease, opacity 200ms ease;
-}
-.hamburger-line + .hamburger-line { margin-top: 5px; }
-.hamburger.open .hamburger-line:nth-child(1) {
-  transform: translateY(7px) rotate(45deg);
-}
-.hamburger.open .hamburger-line:nth-child(2) {
-  opacity: 0;
-}
-.hamburger.open .hamburger-line:nth-child(3) {
-  transform: translateY(-7px) rotate(-45deg);
 }
 
-/* ---- mobile nav drawer ---- */
-@media (max-width: 1100px) {
-  .hamburger { display: flex; }
+.mega-link {
+  display: block;
+  padding: 8px 20px;
+  font-size: 0.92rem;
+  color: var(--ink-soft);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 120ms ease, color 120ms ease;
+}
+.mega-link:hover {
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+.mega-link.active {
+  color: var(--accent);
+  font-weight: 600;
+  background: var(--accent-soft);
+}
 
-  .site-nav {
-    display: none;
-    position: absolute;
-    top: var(--header-h);
+/* ---- mobile: full-width dropdown ---- */
+@media (max-width: 600px) {
+  .mega-dropdown {
     left: 0;
     right: 0;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0;
-    padding: 8px 0 12px;
-    background: var(--card);
-    border-bottom: 1px solid var(--rule);
-    box-shadow: 0 8px 24px -12px rgba(16, 24, 40, 0.24);
-    overflow-y: auto;
-    max-height: calc(100vh - var(--header-h));
-    z-index: 99;
-  }
-  .site-nav.open { display: flex; }
-
-  .site-nav .nav-category {
-    padding: 10px 20px 4px;
-    font-size: 0.7rem;
-    opacity: 0.5;
-  }
-  .site-nav .nav-sep { display: none; }
-
-  .site-nav .nav-link {
-    padding: 8px 20px;
-    border-radius: 0;
-    font-size: 0.95rem;
-    white-space: normal;
-  }
-  .site-nav .nav-link:hover { background: var(--accent-soft); }
-  .site-nav .nav-link.active { background: var(--accent-soft); }
-
-  .site-header-inner { position: relative; }
-}
-
-/* ---- desktop nav overflow hint ---- */
-@media (min-width: 1101px) {
-  .site-nav {
-    mask-image: linear-gradient(to right, #000 95%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to right, #000 95%, transparent 100%);
+    min-width: 0;
   }
 }
 

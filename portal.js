@@ -73,58 +73,50 @@
     title.setAttribute("aria-label", manifest.name + " — portal home");
     inner.appendChild(title);
 
-    const nav = el("nav", "site-nav");
+    const nav = el("nav", "site-nav-mega");
     nav.setAttribute("aria-label", "Tools");
     var groups = groupByCategory(manifest.tools);
     for (var g = 0; g < groups.length; g++) {
       var group = groups[g];
-      if (g > 0) {
-        nav.appendChild(el("span", "nav-sep"));
-      }
-      var catLabel = el("span", "nav-category", group.name);
-      nav.appendChild(catLabel);
+      var item = el("div", "mega-item");
+
+      var trigger = el("button", "mega-trigger", group.name);
+      trigger.setAttribute("aria-expanded", "false");
+      trigger.addEventListener("click", function (e) {
+        e.stopPropagation();
+        var expanded = this.getAttribute("aria-expanded") === "true" ? "false" : "true";
+        this.setAttribute("aria-expanded", expanded);
+      });
+
+      var dropdown = el("div", "mega-dropdown");
       for (var i = 0; i < group.tools.length; i++) {
         var tool = group.tools[i];
         var href = root + "tools/" + tool.slug + "/";
-        var link = el("a", "nav-link", tool.name);
+        var link = el("a", "mega-link", tool.name);
         link.href = href;
-        if (isCurrent(href)) link.classList.add("active");
-        nav.appendChild(link);
+        if (isCurrent(href)) {
+          link.classList.add("active");
+          trigger.setAttribute("aria-expanded", "true");
+        }
+        dropdown.appendChild(link);
       }
+
+      item.appendChild(trigger);
+      item.appendChild(dropdown);
+      nav.appendChild(item);
     }
     inner.appendChild(nav);
 
-    /* hamburger button (visible only on mobile via CSS) */
-    var ham = el("button", "hamburger");
-    ham.setAttribute("aria-label", "Toggle tools menu");
-    ham.setAttribute("aria-expanded", "false");
-    ham.appendChild(el("span", "hamburger-line"));
-    ham.appendChild(el("span", "hamburger-line"));
-    ham.appendChild(el("span", "hamburger-line"));
-    ham.addEventListener("click", function (e) {
-      e.stopPropagation();
-      nav.classList.toggle("open");
-      ham.classList.toggle("open");
-      var expanded = nav.classList.contains("open") ? "true" : "false";
-      ham.setAttribute("aria-expanded", expanded);
-    });
-    /* close nav when a link is clicked */
-    nav.addEventListener("click", function (e) {
-      if (e.target.tagName === "A") {
-        nav.classList.remove("open");
-        ham.classList.remove("open");
-        ham.setAttribute("aria-expanded", "false");
-      }
-    });
-    /* close nav when clicking outside */
+    /* close mega-menus when clicking outside */
     document.addEventListener("click", function (e) {
-      if (nav.classList.contains("open") && !inner.contains(e.target)) {
-        nav.classList.remove("open");
-        ham.classList.remove("open");
-        ham.setAttribute("aria-expanded", "false");
+      var triggers = nav.querySelectorAll(".mega-trigger");
+      for (var i = 0; i < triggers.length; i++) {
+        var item = triggers[i].closest(".mega-item");
+        if (!item.contains(e.target)) {
+          triggers[i].setAttribute("aria-expanded", "false");
+        }
       }
     });
-    inner.appendChild(ham);
 
     header.appendChild(inner);
   }
