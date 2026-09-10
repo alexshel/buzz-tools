@@ -36,6 +36,13 @@
       "description": "Calculate the margin of error and confidence interval for survey results and sample data.",
       "icon": "\u00b1",
       "category": "Data & Analytics"
+    },
+    {
+      "slug": "qr-code-generator",
+      "name": "QR Code Generator",
+      "description": "Generate QR codes with custom styling — choose module shape, colours, error correction level, add a logo, and export as PNG, SVG, JPEG or WebP.",
+      "icon": "▣",
+      "category": "Data & Analytics"
     }
   ]
 }
