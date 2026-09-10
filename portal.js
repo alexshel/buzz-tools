@@ -112,6 +112,16 @@
         }
       });
 
+      /* on hover: close any click-pinned open items so only the hovered
+         item's dropdown shows (via the CSS hover rule). Without this, a
+         click-pinned .open item stays visible when hovering another item. */
+      item.addEventListener("mouseenter", function () {
+        var allItems = this.parentNode.querySelectorAll(".mega-item");
+        for (var i = 0; i < allItems.length; i++) {
+          allItems[i].classList.remove("open");
+        }
+      });
+
       item.appendChild(trigger);
       item.appendChild(dropdown);
       nav.appendChild(item);
