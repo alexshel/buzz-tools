@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QR Code Generator — Buzz Tools</title>
+<link rel="stylesheet" href="../../portal.css">
+<style>
+:root {
+  --bg: #f4f5f7;
+  --card: #ffffff;
+  --ink: #1c1e21;
+  --ink-soft: #6b7280;
+  --rule: #e5e7eb;
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
+  --accent-ink: #ffffff;
+  --accent-soft: rgba(79, 70, 229, 0.1);
+  --ring: rgba(79, 70, 229, 0.35);
+  --radius: 16px;
+  --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 8px 24px -12px rgba(16, 24, 40, 0.18);
+  --header-h: 56px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1115;
+    --card: #1a1d24;
+    --ink: #e7e9ee;
+    --ink-soft: #9aa1ad;
+    --rule: #2a2f3a;
+    --accent: #6d65f0;
+    --accent-hover: #7d76f5;
+    --accent-ink: #ffffff;
+    --accent-soft: rgba(109, 101, 240, 0.16);
+    --ring: rgba(109, 101, 240, 0.4);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+  }
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+               "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  padding: 88px 16px 32px;
+}
+.card {
+  width: 100%;
+  max-width: 880px;
+  margin: 0 auto;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 36px 40px 32px;
+}
+h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 6px;
+}
+.subtitle {
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0 0 28px;
+}
+
+/* ---- Tool layout ---- */
+.tool-layout {
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+}
+.preview-area {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+#qr-canvas {
+  width: 280px;
+  height: 280px;
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  image-rendering: pixelated;
+}
+.preview-label {
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  text-align: center;
+}
+.controls-area {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* ---- Input ---- */
+.input-group label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: 5px;
+  letter-spacing: -0.01em;
+}
+.input-group textarea {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 0.95rem;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  outline: none;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 64px;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+.input-group textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--ring);
+}
+.input-group textarea::placeholder { color: var(--ink-soft); opacity: 0.6; }
+
+/* ---- Controls grid ---- */
+.controls-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.controls-grid .span-2 { grid-column: 1 / -1; }
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.field label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  letter-spacing: -0.01em;
+}
+.field select,
+.field input[type="text"],
+.field input[type="number"] {
+  width: 100%;
+  padding: 9px 12px;
+  font-size: 0.92rem;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+.field select:focus,
+.field input[type="text"]:focus,
+.field input[type="number"]:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--ring);
+}
+
+/* Color pickers inline row */
+.color-row {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+.color-picker-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.color-picker-wrap label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+input[type="color"] {
+  width: 36px;
+  height: 36px;
+  padding: 2px;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  cursor: pointer;
+  background: none;
+}
+input[type="color"]:focus {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+.btn-small {
+  padding: 8px 16px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 120ms ease;
+}
+.btn-small:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* ---- Logo upload ---- */
+.logo-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.logo-row .btn-primary-small {
+  padding: 8px 16px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--accent-ink);
+  background: var(--accent);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 120ms ease;
+}
+.logo-row .btn-primary-small:hover { background: var(--accent-hover); }
+.logo-row .btn-ghost-small {
+  background: transparent;
+  color: var(--ink-soft);
+  padding: 8px 12px;
+  font-weight: 500;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 120ms ease, color 120ms ease;
+}
+.logo-row .btn-ghost-small:hover { background: var(--accent-soft); color: var(--ink); }
+.logo-row .btn-ghost-small:disabled { opacity: 0.4; cursor: not-allowed; }
+#logo-filename {
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+input[type="file"] { display: none; }
+
+/* ---- Export section ---- */
+.export-section {
+  margin-top: 8px;
+  padding-top: 18px;
+  border-top: 1px solid var(--rule);
+}
+.export-section h3 {
+  font-size: 0.88rem;
+  font-weight: 600;
+  margin: 0 0 12px;
+  color: var(--ink);
+}
+.export-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+}
+.export-row .field {
+  flex: 1;
+  min-width: 120px;
+}
+.btn-primary {
+  padding: 12px 28px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent-ink);
+  background: var(--accent);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 120ms ease;
+  white-space: nowrap;
+}
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-primary:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+#download-size-other-wrap {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+#download-size-other-wrap input {
+  width: 80px;
+}
+
+/* ---- Character count / warning ---- */
+.char-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  margin-top: 3px;
+}
+.char-info .warn { color: #dc6803; }
+.char-info .error { color: #d92d20; }
+
+/* ---- Responsive ---- */
+@media (max-width: 767px) {
+  .card { padding: 24px 20px 24px; }
+  .tool-layout {
+    flex-direction: column;
+    align-items: center;
+  }
+  .preview-area { width: 100%; }
+  #qr-canvas {
+    width: 220px;
+    height: 220px;
+  }
+  .controls-grid { grid-template-columns: 1fr; }
+  .controls-grid .span-2 { grid-column: 1; }
+  .color-row { flex-wrap: wrap; }
+  .export-row { flex-direction: column; }
+  .export-row .field { min-width: auto; }
+}
+
+.foot {
+  margin: 28px 0 0;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  text-align: center;
+}
+</style>
+</head>
+<body>
+
+<header id="site-header"></header>
+
+<main class="card">
+  <h1>QR Code Generator</h1>
+  <p class="subtitle">Create custom QR codes with your choice of shape, colours, logo overlay, and export format — everything runs in your browser.</p>
+
+  <div class="tool-layout">
+    <!-- Preview -->
+    <div class="preview-area">
+      <canvas id="qr-canvas" width="280" height="280" aria-label="QR code preview"></canvas>
+      <span class="preview-label">Preview</span>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls-area">
+      <!-- Content -->
+      <div class="input-group">
+        <label for="input-text">Content to encode</label>
+        <textarea id="input-text" placeholder="Enter a URL, text, phone number, or anything…" rows="2">https://example.com</textarea>
+        <div class="char-info">
+          <span id="char-count">0 characters</span>
+          <span id="max-capacity"></span>
+        </div>
+      </div>
+
+      <!-- Style controls -->
+      <div class="controls-grid">
+        <div class="field">
+          <label for="shape">Module shape</label>
+          <select id="shape">
+            <option value="square">Square</option>
+            <option value="round" selected>Round (circle)</option>
+            <option value="rounded">Rounded square</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="ecl">Error correction</label>
+          <select id="ecl">
+            <option value="L">L (7%)</option>
+            <option value="M" selected>M (15%)</option>
+            <option value="Q">Q (25%)</option>
+            <option value="H">H (30%)</option>
+          </select>
+        </div>
+        <div class="field span-2">
+          <div class="color-row">
+            <div class="color-picker-wrap">
+              <label for="fg-color">Foreground</label>
+              <input type="color" id="fg-color" value="#000000">
+            </div>
+            <div class="color-picker-wrap">
+              <label for="bg-color">Background</label>
+              <input type="color" id="bg-color" value="#ffffff">
+            </div>
+            <button id="swap-colors" class="btn-small" type="button" aria-label="Swap colours" style="background:transparent;color:var(--ink-soft);border:1px solid var(--rule);padding:6px 10px;font-size:0.9rem;">⇄</button>
+          </div>
+        </div>
+        <div class="field span-2">
+          <label>Logo (optional)</label>
+          <div class="logo-row">
+            <input type="file" id="logo-input" accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif">
+            <button id="logo-btn" class="btn-primary-small" type="button">Choose image…</button>
+            <span id="logo-filename"></span>
+            <button id="logo-remove" class="btn-ghost-small" type="button" disabled>Remove</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Export -->
+      <div class="export-section">
+        <h3>Export</h3>
+        <div class="export-row">
+          <div class="field">
+            <label for="export-format">Format</label>
+            <select id="export-format">
+              <option value="png">PNG</option>
+              <option value="svg">SVG</option>
+              <option value="jpeg">JPEG</option>
+              <option value="webp">WebP</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="export-size">Raster size</label>
+            <select id="export-size">
+              <option value="512">512 × 512</option>
+              <option value="1024" selected>1024 × 1024</option>
+              <option value="2048">2048 × 2048</option>
+              <option value="4096">4096 × 4096</option>
+              <option value="other">Custom…</option>
+            </select>
+            <div id="download-size-other-wrap" style="display:none;margin-top:4px;">
+              <input type="number" id="export-size-other" value="1024" min="100" max="8000" step="1">
+              <span style="font-size:0.78rem;color:var(--ink-soft);">px</span>
+            </div>
+          </div>
+          <button id="download-btn" class="btn-primary" type="button">⬇ Download</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="foot">All processing happens in your browser · no data is uploaded</p>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+<script src="qr-generator.js"></script>
+<script>QrGenerator.init(document);</script>
+<script src="../../portal.js"></script>
+</body>
+</html>
