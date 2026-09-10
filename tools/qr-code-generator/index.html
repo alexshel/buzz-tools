@@ -302,6 +302,10 @@ input[type="file"] { display: none; }
   opacity: 0.5;
   cursor: not-allowed;
 }
+.export-action {
+  text-align: center;
+  margin-top: 14px;
+}
 #download-size-other-wrap {
   display: flex;
   gap: 6px;
@@ -337,7 +341,7 @@ input[type="file"] { display: none; }
   .controls-grid { grid-template-columns: 1fr; }
   .controls-grid .span-2 { grid-column: 1; }
   .color-row { flex-wrap: wrap; }
-  .export-row { flex-direction: column; }
+  .export-row { flex-direction: row; }
   .export-row .field { min-width: auto; }
 }
 
@@ -406,6 +410,7 @@ input[type="file"] { display: none; }
               <input type="color" id="bg-color" value="#ffffff">
             </div>
             <button id="swap-colors" class="btn-small" type="button" aria-label="Swap colours" style="background:transparent;color:var(--ink-soft);border:1px solid var(--rule);padding:6px 10px;font-size:0.9rem;">⇄</button>
+            <button id="reset-colors" class="btn-small" type="button" aria-label="Reset colours" style="background:transparent;color:var(--ink-soft);border:1px solid var(--rule);padding:6px 10px;font-size:0.9rem;">Reset</button>
           </div>
         </div>
         <div class="field span-2">
@@ -433,7 +438,7 @@ input[type="file"] { display: none; }
             </select>
           </div>
           <div class="field">
-            <label for="export-size">Raster size</label>
+            <label for="export-size">Size</label>
             <select id="export-size">
               <option value="512">512 × 512</option>
               <option value="1024" selected>1024 × 1024</option>
@@ -446,6 +451,8 @@ input[type="file"] { display: none; }
               <span style="font-size:0.78rem;color:var(--ink-soft);">px</span>
             </div>
           </div>
+        </div>
+        <div class="export-action">
           <button id="download-btn" class="btn-primary" type="button">⬇ Download</button>
         </div>
       </div>

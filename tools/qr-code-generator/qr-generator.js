@@ -447,6 +447,10 @@
       state.logoFileName = file.name;
       dom.logoFilename.textContent = file.name;
       dom.logoRemove.disabled = false;
+
+      /* Enforce ECL >= 25% when a logo is present */
+      enforceEclForLogo();
+
       updatePreview();
     };
     reader.onerror = function () {
@@ -455,12 +459,34 @@
     reader.readAsDataURL(file);
   }
 
+  function enforceEclForLogo() {
+    var currentEcl = dom.ecl.value;
+    if (currentEcl === 'L' || currentEcl === 'M') {
+      dom.ecl.value = 'Q';
+      state.ecl = 'Q';
+    }
+    /* Disable L and M options while logo is loaded */
+    var options = dom.ecl.options;
+    for (var i = 0; i < options.length; i++) {
+      if (options[i].value === 'L' || options[i].value === 'M') {
+        options[i].disabled = true;
+      }
+    }
+  }
+
   function clearLogo() {
     state.logoDataURL = null;
     state.logoFileName = "";
     dom.logoFilename.textContent = "";
     dom.logoRemove.disabled = true;
     dom.logoInput.value = "";
+
+    /* Re-enable all ECL options */
+    var options = dom.ecl.options;
+    for (var i = 0; i < options.length; i++) {
+      options[i].disabled = false;
+    }
+
     updatePreview();
   }
 
@@ -474,6 +500,7 @@
     dom.fgColor = document.getElementById("fg-color");
     dom.bgColor = document.getElementById("bg-color");
     dom.swapColors = document.getElementById("swap-colors");
+    dom.resetColors = document.getElementById("reset-colors");
     dom.logoInput = document.getElementById("logo-input");
     dom.logoBtn = document.getElementById("logo-btn");
     dom.logoFilename = document.getElementById("logo-filename");
@@ -489,6 +516,11 @@
     function onUpdate() {
       state.shape = dom.shape.value;
       state.ecl = dom.ecl.value;
+      /* Guard: if a logo is loaded, never allow ECL below Q (25%) */
+      if (state.logoDataURL && (state.ecl === 'L' || state.ecl === 'M')) {
+        dom.ecl.value = 'Q';
+        state.ecl = 'Q';
+      }
       state.fgColor = dom.fgColor.value;
       state.bgColor = dom.bgColor.value;
       updatePreview();
@@ -508,6 +540,15 @@
       dom.bgColor.value = fg;
       state.fgColor = bg;
       state.bgColor = fg;
+      updatePreview();
+    });
+
+    /* Reset colours to default */
+    dom.resetColors.addEventListener("click", function () {
+      dom.fgColor.value = "#000000";
+      dom.bgColor.value = "#ffffff";
+      state.fgColor = "#000000";
+      state.bgColor = "#ffffff";
       updatePreview();
     });
 
