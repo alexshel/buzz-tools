@@ -1,0 +1,11 @@
+{
+  "name": "buzz-tools",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Portal of small client-side web utilities (no build step, static).",
+  "scripts": {
+    "serve": "python3 -m http.server 8000",
+    "tool:add": "node scripts/add-tool.js",
+    "validate": "node scripts/validate.js"
+  }
+}
