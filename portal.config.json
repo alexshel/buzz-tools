@@ -1,0 +1,169 @@
+{
+  "categories": [
+    {
+      "id": "dev-utilities",
+      "name": "Developer Utilities",
+      "description": "Essential tools for everyday development workflows — testing, debugging, formatting, and converting.",
+      "icon": "code",
+      "order": 1,
+      "color": "#4f46e5",
+      "subcategories": [
+        { "id": "api-tools", "name": "API & HTTP", "order": 1 },
+        { "id": "encoding", "name": "Encoding & Formats", "order": 2 },
+        { "id": "database", "name": "Database & SQL", "order": 3 },
+        { "id": "cli-tools", "name": "CLI & Terminal", "order": 4 },
+        { "id": "reference", "name": "Reference & Cheatsheets", "order": 5 }
+      ]
+    },
+    {
+      "id": "design-frontend",
+      "name": "Design & Frontend",
+      "description": "Visual tools for designers and frontend developers — colors, layouts, diagrams, images, and presentations.",
+      "icon": "palette",
+      "order": 2,
+      "color": "#ec4899",
+      "subcategories": [
+        { "id": "color", "name": "Color & Accessibility", "order": 1 },
+        { "id": "layout", "name": "Layout & CSS", "order": 2 },
+        { "id": "images", "name": "Images & Icons", "order": 3 },
+        { "id": "diagrams", "name": "Diagrams & Slides", "order": 4 }
+      ]
+    },
+    {
+      "id": "data-analytics",
+      "name": "Data & Analytics",
+      "description": "Tools for working with data — exploration, transformation, statistics, experimentation, and visualization.",
+      "icon": "bar-chart",
+      "order": 3,
+      "color": "#10b981",
+      "subcategories": [
+        { "id": "exploration", "name": "Exploration & Transformation", "order": 1 },
+        { "id": "statistics", "name": "Statistics & Calculators", "order": 2 },
+        { "id": "experimentation", "name": "Experimentation & A/B Testing", "order": 3 }
+      ]
+    },
+    {
+      "id": "security-auth",
+      "name": "Security & Auth",
+      "description": "Security-focused tools for authentication, tokens, passwords, hashing, and vulnerability testing.",
+      "icon": "shield",
+      "order": 4,
+      "color": "#ef4444",
+      "subcategories": [
+        { "id": "tokens", "name": "Tokens & JWT", "order": 1 },
+        { "id": "passwords", "name": "Passwords & Secrets", "order": 2 },
+        { "id": "hashing", "name": "Hashing & Verification", "order": 3 },
+        { "id": "education", "name": "Security Education", "order": 4 }
+      ]
+    },
+    {
+      "id": "text-content",
+      "name": "Text & Content",
+      "description": "Text manipulation, formatting, generation, and presentation tools for writers and content creators.",
+      "icon": "type",
+      "order": 5,
+      "color": "#8b5cf6",
+      "subcategories": [
+        { "id": "formatting", "name": "Formatting & Conversion", "order": 1 },
+        { "id": "generation", "name": "Content Generation", "order": 2 },
+        { "id": "presentation", "name": "Presentation & Slides", "order": 3 }
+      ]
+    },
+    {
+      "id": "infrastructure",
+      "name": "Infrastructure & DevOps",
+      "description": "Tools for infrastructure, deployment, configuration, scheduling, and webhook debugging.",
+      "icon": "server",
+      "order": 6,
+      "color": "#f97316",
+      "subcategories": [
+        { "id": "config", "name": "Configuration & Env", "order": 1 },
+        { "id": "scheduling", "name": "Scheduling & Cron", "order": 2 },
+        { "id": "webhooks", "name": "Webhooks & Debugging", "order": 3 },
+        { "id": "specs", "name": "Specs & Documentation", "order": 4 }
+      ]
+    },
+    {
+      "id": "games-fun",
+      "name": "Games & Fun",
+      "description": "Lightweight games and fun utilities for breaks and brain teasers.",
+      "icon": "gamepad",
+      "order": 7,
+      "color": "#06b6d4",
+      "subcategories": [
+        { "id": "word-games", "name": "Word Games", "order": 1 },
+        { "id": "generators", "name": "Generators", "order": 2 }
+      ]
+    }
+  ],
+  "homepage": {
+    "sections": [
+      {
+        "id": "hero",
+        "type": "hero",
+        "title": "Small tools, no strings.",
+        "subtitle": "A growing set of free utilities that run entirely in your browser — nothing to install, and your input never leaves your machine.",
+        "layout": "centered"
+      },
+      {
+        "id": "featured",
+        "type": "featured",
+        "title": "Featured Tools",
+        "toolIds": ["qr-code-generator", "regex-tester", "color-palette-generator", "jwt-debugger", "markdown-html-converter"],
+        "layout": "grid",
+        "limit": 5
+      },
+      {
+        "id": "dev-utilities",
+        "type": "category",
+        "title": "Developer Utilities",
+        "categoryId": "dev-utilities",
+        "layout": "grid",
+        "limit": 6
+      },
+      {
+        "id": "design-frontend",
+        "type": "category",
+        "title": "Design & Frontend",
+        "categoryId": "design-frontend",
+        "layout": "grid",
+        "limit": 4
+      },
+      {
+        "id": "recent",
+        "type": "recent",
+        "title": "Recently Added",
+        "layout": "carousel",
+        "limit": 8
+      }
+    ]
+  },
+  "search": {
+    "enabled": true,
+    "engine": "fusejs",
+    "indexFields": ["name", "description", "tags", "category"],
+    "minQueryLength": 2,
+    "maxResults": 20
+  },
+  "navigation": {
+    "showCategoryCounts": true,
+    "showSubcategories": true,
+    "mobileBreakpoint": 768
+  },
+  "toolPage": {
+    "showRelatedTools": true,
+    "relatedBy": ["category", "tags"],
+    "maxRelated": 4,
+    "showBreadcrumbs": true,
+    "showSEO": true
+  },
+  "analytics": {
+    "enabled": false,
+    "events": {
+      "toolOpen": true,
+      "toolComplete": true,
+      "search": true,
+      "categoryView": true
+    }
+  }
+}
