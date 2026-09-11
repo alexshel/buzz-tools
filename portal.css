@@ -404,13 +404,10 @@ body {
 
 /* ---- config-driven additions (phase 1): category colors, counts, search ---- */
 
-/* let a full category set scroll instead of crowding the header */
-.site-nav-mega {
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.site-nav-mega::-webkit-scrollbar { display: none; }
-
+/* NOTE: keep .site-nav-mega overflow visible. An overflow-x:auto scroll
+   container clips the absolutely-positioned .mega-dropdown (overflow-y then
+   computes to auto), which hid the desktop submenu panels entirely. If the
+   category count ever crowds the header, address it in the nav layout, not here. */
 .cat-label {
   display: inline-flex;
   align-items: center;

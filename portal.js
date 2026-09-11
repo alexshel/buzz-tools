@@ -169,16 +169,15 @@
       trigger.addEventListener("click", function (e) {
         e.stopPropagation();
         var clickedItem = this.closest(".mega-item");
-        var isOpen = clickedItem.classList.contains("open");
 
-        /* close all other mega-items */
+        /* open the clicked item and pin it. It stays open until the cursor
+           enters another item (mouseenter below) or another top item is
+           clicked; the document click handler closes it on an outside click. */
         var allItems = nav.querySelectorAll(".mega-item");
         for (var k = 0; k < allItems.length; k++) {
-          allItems[k].classList.remove("open");
+          if (allItems[k] !== clickedItem) allItems[k].classList.remove("open");
         }
-
-        /* toggle this one */
-        if (!isOpen) clickedItem.classList.add("open");
+        clickedItem.classList.add("open");
       });
 
       /* on hover: close any click-pinned open items so only the hovered item's
