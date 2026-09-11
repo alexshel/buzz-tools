@@ -362,7 +362,7 @@
       if (!fuse && window.Fuse) {
         fuse = new window.Fuse(records, {
           keys: fields,
-          threshold: 0.4,
+          threshold: 0.2,
           ignoreLocation: true,
           minMatchCharLength: 1
         });
