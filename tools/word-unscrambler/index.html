@@ -6,8 +6,11 @@
 <title>Word Unscrambler</title>
   <link rel="stylesheet" href="../../portal.css">
 <style>
-  /* page chrome (tokens, body base, .card, h1, .subtitle, form,
-     button, .status, .foot) comes from the shared base in portal.css */
+  /* page chrome (tokens, body base, .card, h1, .subtitle, button,
+     .status, .foot) comes from the shared base in portal.css. `form`
+     stays here: only the word tools use the flex stack — the calculator
+     pages lay out with .form-grid, so the base must not force one. */
+  form { display: flex; flex-direction: column; gap: 12px; }
 
   input {
     width: 100%;

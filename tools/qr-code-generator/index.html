@@ -13,7 +13,7 @@
   margin: 0 auto;
   padding: 36px 40px 32px;
 }
-.tool-page h1 { margin: 0 0 6px; }
+h1 { margin: 0 0 6px; }
 /* ---- Tool layout ---- */
 .tool-layout {
   display: flex;
@@ -184,6 +184,12 @@ input[type="color"]:focus {
   color: var(--ink-soft);
   padding: 8px 12px;
   font-weight: 500;
+  /* QR never had a page-level `button` base, so its buttons left
+     font-size at the UA default. The shared base now sets 1rem, so
+     pin the exact UA default (13.3333px at a 16px root) to keep
+     main's look — the CSS `small` keyword resolves to 13px, which
+     would still be a 0.33px drift. */
+  font-size: 13.3333px;
   border: 1px solid var(--rule);
   border-radius: 10px;
   cursor: pointer;

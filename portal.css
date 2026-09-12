@@ -396,12 +396,22 @@ body {
   border-top: 1px solid var(--rule);
 }
 
-/* ---- shared tool-page theme -----------------------------------------------
-   Single source of truth for tool page chrome. Tool pages must NOT redeclare
-   these: they link portal.css and use <body class="tool-page"> (+ "tool-page--
-   center" for the centered card layout). Pages keep only their tool-specific
-   rules (and field sizing, which pages own).
-   Header is fixed at --header-h; the body padding clears it. */
+/* ---- shared tool-page chrome ---------------------------------------------
+   Single source of truth for the chrome every tool page used to copy into its
+   own <style>. Page-level body/card rules are scoped; the element/class rules
+   below (h1, .subtitle, button, .btn-ghost, .status, .foot) keep the exact
+   selectors the per-page copies used — plain element/class level — so that
+   any classed control still overrides them with its own styles. That is what
+   keeps portal.js's injected site header (mega-menu triggers, hamburger,
+   mobile drawer, search) looking right on tool pages: those controls declare
+   their own classes, which beat the plain element selectors. Raising the
+   specificity (e.g. body.tool-page button) would instead make the base win
+   over the header controls — that was the original "fat indigo nav" bug.
+
+   NOTE: there is deliberately no shared `form` rule. Only the word tools
+   stack form children (display:flex; gap:12px); the calculator pages lay
+   out with .form-grid and main shipped them without a form rule. Pages own
+   their tool-specific rules, field sizing, and any form stacking. */
 body.tool-page {
   padding: calc(var(--header-h) + 32px) 16px 32px;
 }
@@ -425,24 +435,23 @@ body.tool-page--center {
 }
 
 /* page title + intro */
-.tool-page h1 {
+h1 {
   font-size: 1.6rem;
   font-weight: 700;
   letter-spacing: -0.02em;
   margin: 0 0 8px;
 }
-.tool-page .subtitle {
+.subtitle {
   color: var(--ink-soft);
   font-size: 0.95rem;
   line-height: 1.5;
   margin: 0 0 28px;
 }
 
-/* form stack */
-.tool-page form { display: flex; flex-direction: column; gap: 12px; }
-
-/* primary action (pages override padding/size as needed) */
-.tool-page button {
+/* primary action (pages override padding/size as needed; font-family is
+   deliberately NOT set here — the per-page copies never set it either, so
+   buttons keep the UA's button font everywhere, header included) */
+button {
   padding: 13px 16px;
   font-size: 1rem;
   font-weight: 600;
@@ -451,33 +460,32 @@ body.tool-page--center {
   border: none;
   border-radius: 12px;
   cursor: pointer;
-  font-family: inherit;
   transition: background 120ms ease;
 }
-.tool-page button:hover { background: var(--accent-hover); }
-.tool-page button:disabled { opacity: 0.6; cursor: progress; }
-.tool-page button:focus-visible {
+button:hover { background: var(--accent-hover); }
+button:disabled { opacity: 0.6; cursor: progress; }
+button:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
 
 /* secondary action */
-.tool-page .btn-ghost {
+.btn-ghost {
   background: transparent;
   color: var(--accent);
   padding: 8px 16px;
   font-weight: 500;
 }
-.tool-page .btn-ghost:hover { background: var(--accent-soft); }
+.btn-ghost:hover { background: var(--accent-soft); }
 
 /* status line + privacy foot note */
-.tool-page .status {
+.status {
   margin: 14px 0 0;
   font-size: 0.9rem;
   color: var(--ink-soft);
   text-align: center;
 }
-.tool-page .foot {
+.foot {
   margin: 28px 0 0;
   font-size: 0.78rem;
   color: var(--ink-soft);
