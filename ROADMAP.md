@@ -3,7 +3,7 @@
 Status of every tool in the portal. Live tools live in `tools.json` and render on
 the portal; everything here in `planned` is tracked until a tool page exists.
 
-Current catalog: **5 live**, **37 planned** (agreed strategy: keep the portal
+Current catalog: **6 live**, **37 planned** (agreed strategy: keep the portal
 shipping only live tools; planned items land here until built).
 
 Decisions (2026-09-11, @Alex/~DeepSeek):
@@ -22,7 +22,7 @@ Decisions (2026-09-11, @Alex/~DeepSeek):
 | Word to HTML Converter | `word-to-html` | `text-content` (formatting) |
 | Sample Size Calculator | `sample-size-calculator` | `data-analytics` (statistics) |
 | Margin of Error Calculator | `margin-of-error` | `data-analytics` (statistics) |
-| QR Code Generator | `qr-code-generator` | `design-frontend` (images) — *code on unmerged `qr-code-generator` branch, not in main yet* |
+| QR Code Generator | `qr-code-generator` | `design-frontend` (images) — merged via PR #13 |
 
 ## Planned (37 new tools)
 
@@ -102,4 +102,4 @@ Effort is a draft estimate (XS/S/M/L) — refine as each tool is scoped.
 - **JWT trio**: `jwt-debugger` (dev), `certificate-key-inspector` (security), `jwt-playground` (security). Clarify boundaries (parse/view vs sign/attack) or consolidate.
 - **Cron pair**: `cron-expression-explainer` (dev) vs `cron-schedule-visualizer` (infra).
 - **Markdown family**: live `word-to-html` + `markdown-html-converter` + `markdown-table-generator` + `markdown-slides-generator`. Watch for feature creep; keep each focused.
-- **QR Code Generator**: code exists on an `main`-unmerged `qr-code-generator` branch — reuse rather than rebuild when scoping the scanner upgrade.
+- **QR Code Generator**: live in `tools/qr-code-generator/` (merged via PR #13) — reuse rather than rebuild when scoping the scanner upgrade.
