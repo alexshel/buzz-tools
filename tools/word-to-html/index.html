@@ -6,45 +6,8 @@
 <title>Word to HTML Converter & Cleaner</title>
 <link rel="stylesheet" href="../../portal.css">
 <style>
-  :root {
-    --bg: #f4f5f7;
-    --card: #ffffff;
-    --ink: #1c1e21;
-    --ink-soft: #6b7280;
-    --rule: #e5e7eb;
-    --accent: #4f46e5;
-    --accent-hover: #4338ca;
-    --accent-ink: #ffffff;
-    --ring: rgba(79, 70, 229, 0.35);
-    --radius: 16px;
-    --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 8px 24px -12px rgba(16, 24, 40, 0.18);
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #0f1115;
-      --card: #1a1d24;
-      --ink: #e7e9ee;
-      --ink-soft: #9aa1ad;
-      --rule: #2a2f3a;
-      --accent: #6d65f0;
-      --accent-hover: #7d76f5;
-      --accent-ink: #ffffff;
-      --ring: rgba(109, 101, 240, 0.4);
-      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
-    }
-  }
-
-  * { box-sizing: border-box; }
-  html, body { height: 100%; }
-  body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--ink);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-                 "Helvetica Neue", Arial, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    padding: 88px 16px 32px;
-  }
+  /* page chrome (tokens, body base) comes from the shared base in
+     portal.css (body.tool-page) */
 
   .split-layout {
     max-width: 1200px;
@@ -232,43 +195,15 @@
     align-items: center;
   }
 
-  button {
-    padding: 11px 20px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--accent-ink);
-    background: var(--accent);
-    border: none;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: background 120ms ease;
-  }
-  button:hover { background: var(--accent-hover); }
-  button:disabled { opacity: 0.6; cursor: progress; }
-  button:focus-visible {
-    outline: 2px solid var(--ring);
-    outline-offset: 2px;
-  }
+  .tool-page button { padding: 11px 20px; font-size: 0.95rem; border-radius: 10px; }
 
-  .btn-ghost {
-    background: transparent;
-    color: var(--accent);
-    padding: 7px 14px;
-    font-weight: 500;
-  }
-  .btn-ghost:hover {
-    background: var(--accent-soft);
-  }
+  .tool-page .btn-ghost { padding: 7px 14px; }
   .btn-sm {
     padding: 8px 14px;
     font-size: 0.85rem;
   }
 
-  .status {
-    font-size: 0.85rem;
-    color: var(--ink-soft);
-    min-height: 1.3em;
-  }
+  .tool-page .status { font-size: 0.85rem; min-height: 1.3em; margin: 0; }
 
   /* ── output ── */
 
@@ -365,13 +300,7 @@
     gap: 6px;
   }
 
-  .foot {
-    font-size: 0.78rem;
-    color: var(--ink-soft);
-    text-align: center;
-    margin: 24px auto 0;
-    max-width: 1200px;
-  }
+  .tool-page .foot { margin: 24px auto 0; max-width: 1200px; }
 
   @media (max-width: 800px) {
     .split-layout {
@@ -385,7 +314,7 @@
   }
 </style>
 </head>
-<body>
+<body class="tool-page">
   <header id="site-header"></header>
 
   <div class="split-layout">

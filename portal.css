@@ -396,6 +396,94 @@ body {
   border-top: 1px solid var(--rule);
 }
 
+/* ---- shared tool-page theme -----------------------------------------------
+   Single source of truth for tool page chrome. Tool pages must NOT redeclare
+   these: they link portal.css and use <body class="tool-page"> (+ "tool-page--
+   center" for the centered card layout). Pages keep only their tool-specific
+   rules (and field sizing, which pages own).
+   Header is fixed at --header-h; the body padding clears it. */
+body.tool-page {
+  padding: calc(var(--header-h) + 32px) 16px 32px;
+}
+body.tool-page--center {
+  display: grid;
+  place-items: center;
+}
+
+/* standard centered tool panel (word games, calculators, qr) */
+.tool-page .card {
+  width: 100%;
+  max-width: 640px;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 40px 40px 32px;
+}
+@media (max-width: 520px) {
+  .tool-page .card { padding: 28px 20px 24px; }
+}
+
+/* page title + intro */
+.tool-page h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 8px;
+}
+.tool-page .subtitle {
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0 0 28px;
+}
+
+/* form stack */
+.tool-page form { display: flex; flex-direction: column; gap: 12px; }
+
+/* primary action (pages override padding/size as needed) */
+.tool-page button {
+  padding: 13px 16px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent-ink);
+  background: var(--accent);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 120ms ease;
+}
+.tool-page button:hover { background: var(--accent-hover); }
+.tool-page button:disabled { opacity: 0.6; cursor: progress; }
+.tool-page button:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* secondary action */
+.tool-page .btn-ghost {
+  background: transparent;
+  color: var(--accent);
+  padding: 8px 16px;
+  font-weight: 500;
+}
+.tool-page .btn-ghost:hover { background: var(--accent-soft); }
+
+/* status line + privacy foot note */
+.tool-page .status {
+  margin: 14px 0 0;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  text-align: center;
+}
+.tool-page .foot {
+  margin: 28px 0 0;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
 @media (max-width: 520px) {
   .home { padding: calc(var(--header-h) + 32px) 16px 32px; }
   .hero h1 { font-size: 1.7rem; }
