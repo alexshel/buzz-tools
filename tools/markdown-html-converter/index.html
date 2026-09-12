@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Markdown ↔ HTML Converter — Buzz Tools</title>
+<link rel="stylesheet" href="../../portal.css">
+<style>
+  /* Shared chrome (tokens — incl. accent/button color — body base, h1,
+     .subtitle, button, .btn-ghost, .status, .foot) comes from portal.css per
+     the shared-theme contract (#17): pages must NOT redeclare tokens or
+     element chrome. Buttons therefore inherit the site-wide purple accent,
+     matching every other tool. Keep only tool-specific rules + sizing here
+     with plain selectors so the injected header controls keep winning. */
+  .workbench {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .split-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+
+  .split-pane {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 24px 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .pane-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .pane-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    margin: 0;
+  }
+  .pane-badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--accent-ink);
+    background: var(--accent);
+    padding: 3px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  /* ── direction tabs (Markdown ⇄ HTML) ── */
+  .input-tabs {
+    display: flex;
+    gap: 2px;
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 2px;
+    align-self: flex-start;
+  }
+  .input-tab {
+    padding: 5px 14px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: background 120ms ease, color 120ms ease;
+  }
+  .input-tab:hover { color: var(--ink); }
+  .input-tab.active {
+    background: var(--card);
+    color: var(--ink);
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  }
+
+  /* ── input textarea ── */
+  .input-box {
+    width: 100%;
+    padding: 16px;
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: var(--ink);
+    background: var(--bg);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    outline: none;
+    height: 360px;
+    max-height: 70vh;
+    resize: vertical;
+    font-family: "SF Mono", "Cascadia Code", "Consolas", monospace;
+    font-size: 0.85rem;
+    tab-size: 2;
+    transition: border-color 120ms ease, box-shadow 120ms ease;
+  }
+  .input-box:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--ring);
+  }
+  .input-box::placeholder { color: var(--ink-soft); opacity: 0.8; }
+
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+  .btn-sm {
+    padding: 8px 14px;
+    font-size: 0.85rem;
+  }
+
+  /* ── output tabs + panels ── */
+  .tabs {
+    display: flex;
+    gap: 2px;
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 2px;
+    align-self: flex-start;
+  }
+  .tab {
+    padding: 5px 14px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: background 120ms ease, color 120ms ease;
+  }
+  .tab:hover { color: var(--ink); }
+  .tab.active {
+    background: var(--card);
+    color: var(--ink);
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  }
+
+  #output-source {
+    margin: 0;
+    padding: 14px;
+    background: var(--bg);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    font-family: "SF Mono", "Cascadia Code", "Consolas", monospace;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--ink);
+    max-height: 360px;
+    overflow: auto;
+  }
+
+  #output-preview {
+    padding: 14px;
+    border: 1px dashed var(--rule);
+    border-radius: 10px;
+    font-size: 0.92rem;
+    line-height: 1.6;
+    max-height: 360px;
+    overflow: auto;
+  }
+  #output-preview h1, #output-preview h2, #output-preview h3,
+  #output-preview h4, #output-preview h5, #output-preview h6 { margin: 0.6em 0 0.3em; }
+  #output-preview p { margin: 0 0 0.6em; }
+  #output-preview ul, #output-preview ol { margin: 0 0 0.6em; padding-left: 1.5em; }
+  #output-preview li { margin: 0.15em 0; }
+  #output-preview blockquote { margin: 0 0 0.6em; padding-left: 0.9em; border-left: 3px solid var(--rule); color: var(--ink-soft); }
+  #output-preview pre { background: var(--bg); border: 1px solid var(--rule); border-radius: 6px; padding: 10px; overflow: auto; }
+  #output-preview code { font-family: "SF Mono", "Cascadia Code", "Consolas", monospace; font-size: 0.85em; }
+  #output-preview img { max-width: 100%; height: auto; border-radius: 6px; }
+  #output-preview a { color: var(--accent); }
+  #output-preview del { color: var(--ink-soft); }
+  #output-preview hr { border: none; border-top: 1px solid var(--rule); margin: 0.8em 0; }
+
+  [hidden] { display: none !important; }
+
+  #output-empty {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 200px;
+    color: var(--ink-soft);
+    gap: 8px;
+  }
+  #output.has-output #output-empty { display: none; }
+  #output:not(.has-output) #output-empty { display: flex; }
+
+  .status { margin: 20px 0 0; }
+
+  @media (max-width: 800px) {
+    .split-layout {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    .split-pane { padding: 20px; }
+    .input-box { height: 220px; }
+  }
+</style>
+</head>
+<body class="tool-page">
+  <header id="site-header"></header>
+
+  <div class="workbench">
+    <h1>Markdown ↔ HTML Converter</h1>
+    <p class="subtitle">Paste Markdown or HTML and convert it the other way — a GitHub-Flavored Markdown subset with inline preview. Everything runs in your browser; nothing is ever uploaded.</p>
+
+    <div class="split-layout">
+
+      <!-- LEFT: input -->
+      <div class="split-pane">
+        <div class="pane-header">
+          <span class="pane-title">Input</span>
+          <span class="pane-badge"><span id="input-char-count">0</span> chars</span>
+        </div>
+
+        <div class="input-tabs" role="tablist" aria-label="Conversion direction">
+          <button class="input-tab active" data-mode="md&gt;html" role="tab" aria-selected="true">Markdown → HTML</button>
+          <button class="input-tab" data-mode="html&gt;md" role="tab" aria-selected="false">HTML → Markdown</button>
+        </div>
+
+        <label for="input" class="sr-only" hidden>Input</label>
+        <textarea id="input" class="input-box" spellcheck="false"
+          placeholder="# Heading&#10;&#10;Type or paste **Markdown** here — or switch to &#34;HTML → Markdown&#34; and paste HTML. Then click Convert."></textarea>
+
+        <div class="row">
+          <button id="convert-btn" type="button">Convert</button>
+          <button id="clear-btn" class="btn-ghost btn-sm" type="button">Clear</button>
+          <button id="sample-btn" class="btn-ghost btn-sm" type="button">Load sample</button>
+        </div>
+      </div>
+
+      <!-- RIGHT: output -->
+      <div class="split-pane">
+        <div class="pane-header">
+          <span class="pane-title">Output</span>
+          <span class="pane-badge"><span id="output-char-count">0</span> chars · <span id="output-line-count">0</span> lines</span>
+        </div>
+
+        <div id="output" aria-live="polite" class="has-output">
+          <div id="output-empty">
+            <span style="font-size:2.2rem;opacity:0.4;">⇄</span>
+            <span id="output-empty-text">Paste Markdown or HTML on the left and click Convert — the result appears here.</span>
+          </div>
+
+          <div class="tabs" role="tablist" aria-label="Output view">
+            <button class="tab active" data-tab="source" role="tab" aria-selected="true">Source</button>
+            <button class="tab" data-tab="preview" role="tab" aria-selected="false">Preview</button>
+          </div>
+
+          <pre id="output-source"></pre>
+          <div id="output-preview" hidden></div>
+        </div>
+
+        <div class="row">
+          <button id="copy-btn" class="btn-ghost btn-sm" type="button">Copy output</button>
+        </div>
+      </div>
+
+    </div>
+
+    <p id="status" class="status"></p>
+    <p class="foot">All processing happens in your browser · nothing you paste is ever sent to a server</p>
+  </div>
+
+  <noscript><p style="text-align:center;padding:20px">This tool needs JavaScript enabled.</p></noscript>
+  <script src="markdown-html-converter.js"></script>
+  <script>MarkdownHtmlConverter.init(document);</script>
+  <script src="../../portal.js"></script>
+</body>
+</html>
