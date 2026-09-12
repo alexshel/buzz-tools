@@ -6,22 +6,12 @@
 <title>Markdown ↔ HTML Converter — Buzz Tools</title>
 <link rel="stylesheet" href="../../portal.css">
 <style>
-  /* Category accent overrides; shared chrome (tokens, body base, h1, .subtitle,
-     button, .btn-ghost, .status, .foot) comes from portal.css per the
-     shared-theme contract (#17). Keep only tool-specific rules + sizing here
+  /* Shared chrome (tokens — incl. accent/button color — body base, h1,
+     .subtitle, button, .btn-ghost, .status, .foot) comes from portal.css per
+     the shared-theme contract (#17): pages must NOT redeclare tokens or
+     element chrome. Buttons therefore inherit the site-wide purple accent,
+     matching every other tool. Keep only tool-specific rules + sizing here
      with plain selectors so the injected header controls keep winning. */
-  :root {
-    --accent: #ec4899;
-    --accent-hover: #d03f87;
-    --ring: #ec489959;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --accent-hover: #ee5ea5;
-      --ring: #ec489966;
-    }
-  }
-
   .workbench {
     max-width: 1200px;
     margin: 0 auto;
@@ -232,7 +222,7 @@
 
   <div class="workbench">
     <h1>Markdown ↔ HTML Converter</h1>
-    <p class="subtitle">Paste Markdown or HTML and convert it the other way — a GitHub-Flavored Markdown subset with live preview. Everything runs in your browser; nothing is ever uploaded.</p>
+    <p class="subtitle">Paste Markdown or HTML and convert it the other way — a GitHub-Flavored Markdown subset with inline preview. Everything runs in your browser; nothing is ever uploaded.</p>
 
     <div class="split-layout">
 
@@ -250,9 +240,10 @@
 
         <label for="input" class="sr-only" hidden>Input</label>
         <textarea id="input" class="input-box" spellcheck="false"
-          placeholder="# Heading&#10;&#10;Type or paste **Markdown** here — or switch to &#34;HTML → Markdown&#34; and paste HTML. Conversion is live as you type."></textarea>
+          placeholder="# Heading&#10;&#10;Type or paste **Markdown** here — or switch to &#34;HTML → Markdown&#34; and paste HTML. Then click Convert."></textarea>
 
         <div class="row">
+          <button id="convert-btn" type="button">Convert</button>
           <button id="clear-btn" class="btn-ghost btn-sm" type="button">Clear</button>
           <button id="sample-btn" class="btn-ghost btn-sm" type="button">Load sample</button>
         </div>
@@ -268,7 +259,7 @@
         <div id="output" aria-live="polite" class="has-output">
           <div id="output-empty">
             <span style="font-size:2.2rem;opacity:0.4;">⇄</span>
-            <span id="output-empty-text">Start typing or paste content on the left — the converted result appears here.</span>
+            <span id="output-empty-text">Paste Markdown or HTML on the left and click Convert — the result appears here.</span>
           </div>
 
           <div class="tabs" role="tablist" aria-label="Output view">

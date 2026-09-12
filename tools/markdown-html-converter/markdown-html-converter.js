@@ -666,6 +666,7 @@ var MarkdownHtmlConverter = (function () {
     var outputPreview = doc.getElementById("output-preview");
     var outputCharCount = doc.getElementById("output-char-count");
     var outputLineCount = doc.getElementById("output-line-count");
+    var convertBtn = doc.getElementById("convert-btn");
     var copyBtn = doc.getElementById("copy-btn");
     var clearBtn = doc.getElementById("clear-btn");
     var sampleBtn = doc.getElementById("sample-btn");
@@ -674,7 +675,6 @@ var MarkdownHtmlConverter = (function () {
     var outputTabs = Array.prototype.slice.call(doc.querySelectorAll("#output .tab"));
 
     var mode = "md>html";
-    var debounce = null;
 
     function setStatus(msg, isError) {
       status.textContent = msg || "";
@@ -725,8 +725,8 @@ var MarkdownHtmlConverter = (function () {
 
     function setPlaceholder() {
       input.placeholder = mode === "md>html"
-        ? "# Heading\n\nType or paste **Markdown** here — it converts to HTML live."
-        : "<h1>Heading</h1>\n\nType or paste <strong>HTML</strong> here — it converts to Markdown live.";
+        ? "# Heading\n\nType or paste **Markdown** here — then click Convert to turn it into HTML."
+        : "<h1>Heading</h1>\n\nType or paste <strong>HTML</strong> here — then click Convert to turn it into Markdown.";
     }
 
     function setMode(m) {
@@ -737,7 +737,6 @@ var MarkdownHtmlConverter = (function () {
         inputTabs[i].setAttribute("aria-selected", isOn ? "true" : "false");
       }
       setPlaceholder();
-      convert();
     }
 
     function fallbackCopy(text) {
@@ -766,16 +765,17 @@ var MarkdownHtmlConverter = (function () {
       }
     }
 
-    input.addEventListener("input", function () {
-      clearTimeout(debounce);
-      debounce = setTimeout(convert, 180);
-    });
+    /* conversion is manual — only runs on Convert (or Ctrl/Cmd+Enter) */
+    convertBtn.addEventListener("click", convert);
     input.addEventListener("keydown", function (e) {
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
         e.preventDefault();
-        clearTimeout(debounce);
         convert();
       }
+    });
+    /* input char count updates as you type; conversion does not */
+    input.addEventListener("input", function () {
+      inputCharCount.textContent = input.value.length.toLocaleString();
     });
 
     for (var i = 0; i < inputTabs.length; i++) {
@@ -803,8 +803,9 @@ var MarkdownHtmlConverter = (function () {
 
     sampleBtn.addEventListener("click", function () {
       input.value = mode === "md>html" ? SAMPLE_MD : SAMPLE_HTML;
-      convert();
-      setStatus("Sample loaded.");
+      inputCharCount.textContent = input.value.length.toLocaleString();
+      showEmpty();
+      setStatus("Sample loaded — click Convert to see the result.");
     });
 
     copyBtn.addEventListener("click", copyOutput);

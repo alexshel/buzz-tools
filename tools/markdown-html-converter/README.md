@@ -1,8 +1,9 @@
 # Markdown ↔ HTML Converter
 
-Convert Markdown to HTML and back — a GitHub-Flavored Markdown subset with live
-preview and semantic output. Everything runs in your browser; nothing is
-uploaded.
+Convert Markdown to HTML and back — a GitHub-Flavored Markdown subset with
+inline preview and semantic output. Conversion is manual: paste on the left,
+click Convert, and the result appears on the right. Everything runs in your
+browser; nothing is uploaded.
 
 ## Features
 
