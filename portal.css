@@ -396,6 +396,102 @@ body {
   border-top: 1px solid var(--rule);
 }
 
+/* ---- shared tool-page chrome ---------------------------------------------
+   Single source of truth for the chrome every tool page used to copy into its
+   own <style>. Page-level body/card rules are scoped; the element/class rules
+   below (h1, .subtitle, button, .btn-ghost, .status, .foot) keep the exact
+   selectors the per-page copies used — plain element/class level — so that
+   any classed control still overrides them with its own styles. That is what
+   keeps portal.js's injected site header (mega-menu triggers, hamburger,
+   mobile drawer, search) looking right on tool pages: those controls declare
+   their own classes, which beat the plain element selectors. Raising the
+   specificity (e.g. body.tool-page button) would instead make the base win
+   over the header controls — that was the original "fat indigo nav" bug.
+
+   NOTE: there is deliberately no shared `form` rule. Only the word tools
+   stack form children (display:flex; gap:12px); the calculator pages lay
+   out with .form-grid and main shipped them without a form rule. Pages own
+   their tool-specific rules, field sizing, and any form stacking. */
+body.tool-page {
+  padding: calc(var(--header-h) + 32px) 16px 32px;
+}
+body.tool-page--center {
+  display: grid;
+  place-items: center;
+}
+
+/* standard centered tool panel (word games, calculators, qr) */
+.tool-page .card {
+  width: 100%;
+  max-width: 640px;
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 40px 40px 32px;
+}
+@media (max-width: 520px) {
+  .tool-page .card { padding: 28px 20px 24px; }
+}
+
+/* page title + intro */
+h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 8px;
+}
+.subtitle {
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0 0 28px;
+}
+
+/* primary action (pages override padding/size as needed; font-family is
+   deliberately NOT set here — the per-page copies never set it either, so
+   buttons keep the UA's button font everywhere, header included) */
+button {
+  padding: 13px 16px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--accent-ink);
+  background: var(--accent);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+button:hover { background: var(--accent-hover); }
+button:disabled { opacity: 0.6; cursor: progress; }
+button:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* secondary action */
+.btn-ghost {
+  background: transparent;
+  color: var(--accent);
+  padding: 8px 16px;
+  font-weight: 500;
+}
+.btn-ghost:hover { background: var(--accent-soft); }
+
+/* status line + privacy foot note */
+.status {
+  margin: 14px 0 0;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  text-align: center;
+}
+.foot {
+  margin: 28px 0 0;
+  font-size: 0.78rem;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
 @media (max-width: 520px) {
   .home { padding: calc(var(--header-h) + 32px) 16px 32px; }
   .hero h1 { font-size: 1.7rem; }

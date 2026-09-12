@@ -50,59 +50,20 @@ function generateToolHtml(config, colors) {
 <title>${name}</title>
   <link rel="stylesheet" href="../../portal.css">
 <style>
+  /* Category accent overrides; shared chrome (tokens, body base, .card, h1,
+     .subtitle, form, button, .status, .foot) comes from portal.css. */
   :root {
-    --bg: #f4f5f7;
-    --card: #ffffff;
-    --ink: #1c1e21;
-    --ink-soft: #6b7280;
-    --rule: #e5e7eb;
     --accent: ${colors.accent};
     --accent-hover: ${colors.hover};
-    --accent-ink: #ffffff;
     --ring: ${colors.ring};
-    --radius: 16px;
-    --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 8px 24px -12px rgba(16, 24, 40, 0.18);
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #0f1115;
-      --card: #1a1d24;
-      --ink: #e7e9ee;
-      --ink-soft: #9aa1ad;
-      --rule: #2a2f3a;
-      --accent: ${colors.accent};
       --accent-hover: ${colors.darkHover};
-      --accent-ink: #ffffff;
       --ring: ${colors.darkRing};
-      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
     }
   }
-  * { box-sizing: border-box; }
-  html, body { height: 100%; }
-  body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--ink);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-                 "Helvetica Neue", Arial, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    display: grid;
-    place-items: center;
-    padding: 88px 16px 32px;
-  }
-  .card {
-    width: 100%;
-    max-width: 640px;
-    background: var(--card);
-    border: 1px solid var(--rule);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: 40px 40px 32px;
-  }
-  h1 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 8px; }
-  .subtitle { color: var(--ink-soft); font-size: 0.95rem; line-height: 1.5; margin: 0 0 28px; }
-  form { display: flex; flex-direction: column; gap: 12px; }
-  input, textarea {
+  textarea {
     width: 100%;
     padding: 14px 16px;
     font-size: 1rem;
@@ -112,34 +73,19 @@ function generateToolHtml(config, colors) {
     border: 1px solid var(--rule);
     border-radius: 12px;
     outline: none;
-    transition: border-color 120ms ease, box-shadow 120ms ease;
+    resize: vertical;
+    min-height: 80px;
     font-family: inherit;
+    transition: border-color 120ms ease, box-shadow 120ms ease;
   }
-  input::placeholder, textarea::placeholder { color: var(--ink-soft); font-weight: 400; opacity: 0.75; }
-  input:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--ring); }
-  button {
-    padding: 13px 16px;
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--accent-ink);
-    background: var(--accent);
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: background 120ms ease;
-  }
-  button:hover { background: var(--accent-hover); }
-  button:disabled { opacity: 0.6; cursor: progress; }
-  button:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
-  .status { margin: 14px 0 0; font-size: 0.9rem; color: var(--ink-soft); text-align: center; }
+  textarea::placeholder { color: var(--ink-soft); font-weight: 400; opacity: 0.75; }
+  textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--ring); }
   .output { margin-top: 24px; border-top: 1px solid var(--rule); padding-top: 20px; }
   .output h3 { font-size: 1rem; font-weight: 600; margin: 0 0 12px; }
   .output pre { background: var(--bg); border: 1px solid var(--rule); border-radius: 8px; padding: 16px; overflow: auto; font-size: 0.9rem; line-height: 1.6; }
-  .foot { margin: 28px 0 0; font-size: 0.78rem; color: var(--ink-soft); text-align: center; }
-  @media (max-width: 520px) { .card { padding: 28px 20px 24px; } }
 </style>
 </head>
-<body>
+<body class="tool-page tool-page--center">
   <header id="site-header"></header>
   <main class="card">
     <h1>${name}</h1>

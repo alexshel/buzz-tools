@@ -6,67 +6,8 @@
 <title>Margin of Error Calculator</title>
 <link rel="stylesheet" href="../../portal.css">
 <style>
-  :root {
-    --bg: #f4f5f7;
-    --card: #ffffff;
-    --ink: #1c1e21;
-    --ink-soft: #6b7280;
-    --rule: #e5e7eb;
-    --accent: #4f46e5;
-    --accent-hover: #4338ca;
-    --accent-ink: #ffffff;
-    --ring: rgba(79, 70, 229, 0.35);
-    --radius: 16px;
-    --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 8px 24px -12px rgba(16, 24, 40, 0.18);
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #0f1115;
-      --card: #1a1d24;
-      --ink: #e7e9ee;
-      --ink-soft: #9aa1ad;
-      --rule: #2a2f3a;
-      --accent: #6d65f0;
-      --accent-hover: #7d76f5;
-      --accent-ink: #ffffff;
-      --ring: rgba(109, 101, 240, 0.4);
-      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
-    }
-  }
-  * { box-sizing: border-box; }
-  html, body { height: 100%; }
-  body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--ink);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-                 "Helvetica Neue", Arial, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    display: grid;
-    place-items: center;
-    padding: 88px 16px 32px;
-  }
-  .card {
-    width: 100%;
-    max-width: 640px;
-    background: var(--card);
-    border: 1px solid var(--rule);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: 40px 40px 32px;
-  }
-  h1 {
-    font-size: 1.6rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    margin: 0 0 8px;
-  }
-  .subtitle {
-    color: var(--ink-soft);
-    font-size: 0.95rem;
-    line-height: 1.5;
-    margin: 0 0 28px;
-  }
+  /* page chrome (tokens, body base, .card, h1, .subtitle,
+     button, .foot) comes from the shared base in portal.css */
   .form-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -104,29 +45,7 @@
     align-items: center;
     margin-top: 4px;
   }
-  button {
-    padding: 13px 24px;
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--accent-ink);
-    background: var(--accent);
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: background 120ms ease;
-  }
-  button:hover { background: var(--accent-hover); }
-  button:focus-visible {
-    outline: 2px solid var(--ring);
-    outline-offset: 2px;
-  }
-  .btn-ghost {
-    background: transparent;
-    color: var(--accent);
-    padding: 8px 16px;
-    font-weight: 500;
-  }
-  .btn-ghost:hover { background: var(--accent-soft); }
+  button { padding: 13px 24px; }
   #output {
     margin-top: 24px;
     border-top: 1px solid var(--rule);
@@ -164,20 +83,13 @@
     color: var(--ink-soft);
   }
   .result-details strong { color: var(--ink); }
-  .foot {
-    margin: 28px 0 0;
-    font-size: 0.78rem;
-    color: var(--ink-soft);
-    text-align: center;
-  }
   @media (max-width: 520px) {
-    .card { padding: 28px 20px 24px; }
     .form-grid { grid-template-columns: 1fr; }
     .result-big { font-size: 1.8rem; }
   }
 </style>
 </head>
-<body>
+<body class="tool-page tool-page--center">
   <header id="site-header"></header>
   <main class="card">
     <h1>Margin of Error Calculator</h1>

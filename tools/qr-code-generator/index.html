@@ -6,70 +6,14 @@
 <title>QR Code Generator — Buzz Tools</title>
 <link rel="stylesheet" href="../../portal.css">
 <style>
-:root {
-  --bg: #f4f5f7;
-  --card: #ffffff;
-  --ink: #1c1e21;
-  --ink-soft: #6b7280;
-  --rule: #e5e7eb;
-  --accent: #4f46e5;
-  --accent-hover: #4338ca;
-  --accent-ink: #ffffff;
-  --accent-soft: rgba(79, 70, 229, 0.1);
-  --ring: rgba(79, 70, 229, 0.35);
-  --radius: 16px;
-  --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 8px 24px -12px rgba(16, 24, 40, 0.18);
-  --header-h: 56px;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0f1115;
-    --card: #1a1d24;
-    --ink: #e7e9ee;
-    --ink-soft: #9aa1ad;
-    --rule: #2a2f3a;
-    --accent: #6d65f0;
-    --accent-hover: #7d76f5;
-    --accent-ink: #ffffff;
-    --accent-soft: rgba(109, 101, 240, 0.16);
-    --ring: rgba(109, 101, 240, 0.4);
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
-  }
-}
-* { box-sizing: border-box; }
-html, body { height: 100%; }
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--ink);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-               "Helvetica Neue", Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  padding: 88px 16px 32px;
-}
-.card {
-  width: 100%;
+/* page chrome (tokens, body base, .subtitle, .foot) comes from the
+   shared base in portal.css (body.tool-page) */
+.tool-page .card {
   max-width: 880px;
   margin: 0 auto;
-  background: var(--card);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
   padding: 36px 40px 32px;
 }
-h1 {
-  font-size: 1.6rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  margin: 0 0 6px;
-}
-.subtitle {
-  color: var(--ink-soft);
-  font-size: 0.95rem;
-  line-height: 1.5;
-  margin: 0 0 28px;
-}
-
+h1 { margin: 0 0 6px; }
 /* ---- Tool layout ---- */
 .tool-layout {
   display: flex;
@@ -240,6 +184,12 @@ input[type="color"]:focus {
   color: var(--ink-soft);
   padding: 8px 12px;
   font-weight: 500;
+  /* QR never had a page-level `button` base, so its buttons left
+     font-size at the UA default. The shared base now sets 1rem, so
+     pin the exact UA default (13.3333px at a 16px root) to keep
+     main's look — the CSS `small` keyword resolves to 13px, which
+     would still be a 0.33px drift. */
+  font-size: 13.3333px;
   border: 1px solid var(--rule);
   border-radius: 10px;
   cursor: pointer;
@@ -328,7 +278,7 @@ input[type="file"] { display: none; }
 
 /* ---- Responsive ---- */
 @media (max-width: 767px) {
-  .card { padding: 24px 20px 24px; }
+  .tool-page .card { padding: 24px 20px 24px; }
   .tool-layout {
     flex-direction: column;
     align-items: center;
@@ -345,15 +295,9 @@ input[type="file"] { display: none; }
   .export-row .field { min-width: auto; }
 }
 
-.foot {
-  margin: 28px 0 0;
-  font-size: 0.78rem;
-  color: var(--ink-soft);
-  text-align: center;
-}
 </style>
 </head>
-<body>
+<body class="tool-page">
 
 <header id="site-header"></header>
 
