@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 /**
  * Tool Scaffold Generator
- * Usage: node scripts/add-tool.js --slug my-tool --name "My Tool" --category dev-utilities --description "Does amazing things"
+ * Usage: node scripts/add-tool.js --slug my-tool --name "My Tool" --category dev-utilities --description "Does amazing things" [--icon 🔧] [--tags "word,puzzle"]
+ *
+ * Also updates tools.json (manifest entry, status "building") and uses the
+ * category's color from portal.config.json for the generated page theme.
  */
 
 const fs = require('fs');
@@ -35,7 +38,7 @@ function validateConfig(config) {
   return config;
 }
 
-function generateToolHtml(config) {
+function generateToolHtml(config, colors) {
   const { slug, name, description, category } = config;
   const icon = config.icon || '🔧';
 
@@ -53,10 +56,10 @@ function generateToolHtml(config) {
     --ink: #1c1e21;
     --ink-soft: #6b7280;
     --rule: #e5e7eb;
-    --accent: #4f46e5;
-    --accent-hover: #4338ca;
+    --accent: ${colors.accent};
+    --accent-hover: ${colors.hover};
     --accent-ink: #ffffff;
-    --ring: rgba(79, 70, 229, 0.35);
+    --ring: ${colors.ring};
     --radius: 16px;
     --shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 8px 24px -12px rgba(16, 24, 40, 0.18);
   }
@@ -67,10 +70,10 @@ function generateToolHtml(config) {
       --ink: #e7e9ee;
       --ink-soft: #9aa1ad;
       --rule: #2a2f3a;
-      --accent: #6d65f0;
-      --accent-hover: #7d76f5;
+      --accent: ${colors.accent};
+      --accent-hover: ${colors.darkHover};
       --accent-ink: #ffffff;
-      --ring: rgba(109, 101, 240, 0.4);
+      --ring: ${colors.darkRing};
       --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
     }
   }
@@ -228,8 +231,54 @@ const ${className} = (() => {
 })();`;
 }
 
+function loadJson(relPath) {
+  const p = path.join(__dirname, '..', relPath);
+  try { return JSON.parse(fs.readFileSync(p, 'utf8')); }
+  catch (e) {
+    console.error(`❌ Cannot read ${relPath}: ${e.message}`);
+    process.exit(1);
+  }
+}
+
+/** Mix two #rrggbb colors: t=0 -> a, t=1 -> b. */
+function mix(a, b, t) {
+  const pa = a.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+  const pb = b.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+  if (!pa || !pb) return a;
+  const ch = (i) => {
+    const v = Math.round(parseInt(pa[i], 16) + (parseInt(pb[i], 16) - parseInt(pa[i], 16)) * t);
+    return v.toString(16).padStart(2, '0');
+  };
+  return `#${ch(1)}${ch(2)}${ch(3)}`;
+}
+
+/** Derive accent-family tokens from the category color (with dark-mode guards). */
+function makeColors(accent) {
+  return {
+    accent,
+    hover: mix(accent, '#000000', 0.12),
+    darkHover: mix(accent, '#ffffff', 0.12),
+    ring: accent + '59',     // 35% alpha focus ring
+    darkRing: accent + '66', // 40% alpha focus ring in dark mode
+  };
+}
+
+function manifestEntryExists(manifest, slug) {
+  return Array.isArray(manifest.tools) && manifest.tools.some(t => t && t.slug === slug);
+}
+
 function main() {
   const config = validateConfig(parseArgs());
+
+  // -- category must be a real portal.config.json category id -----------------
+  const portalConfig = loadJson('portal.config.json');
+  const categories = Array.isArray(portalConfig.categories) ? portalConfig.categories : [];
+  const category = categories.find(c => c && c.id === config.category);
+  if (!category) {
+    const ids = categories.map(c => c.id).join(', ');
+    console.error(`❌ Unknown category "${config.category}". Valid ids: ${ids}`);
+    process.exit(1);
+  }
 
   const toolDir = path.join(__dirname, '..', 'tools', config.slug);
   if (fs.existsSync(toolDir)) {
@@ -237,11 +286,19 @@ function main() {
     process.exit(1);
   }
 
-  fs.mkdirSync(toolDir, { recursive: true });
+  const manifest = loadJson('tools.json');
+  if (manifestEntryExists(manifest, config.slug)) {
+    console.error(`❌ tools.json already contains a tool with slug "${config.slug}"`);
+    process.exit(1);
+  }
 
-  fs.writeFileSync(path.join(toolDir, 'index.html'), generateToolHtml(config));
+  fs.mkdirSync(toolDir, { recursive: true });
+  const colors = makeColors(category.color || '#4f46e5');
+
+  fs.writeFileSync(path.join(toolDir, 'index.html'), generateToolHtml(config, colors));
   fs.writeFileSync(path.join(toolDir, `${config.slug}.js`), generateToolJs(config));
 
+  // -- manifest: append the entry with status "building" ----------------------
   const readme = `# ${config.name}
 
 ${config.description}
@@ -254,12 +311,14 @@ Open \`index.html\` in a browser, or serve the \`tools/${config.slug}/\` directo
 
 \`\`\`bash
 # Serve locally
-npx serve tools/${config.slug}
+npm run serve
 \`\`\`
 
 ## Adding to Portal
 
-Add an entry to \`tools.json\` at the repo root with the same \`slug\`, \`name\`, \`description\`, \`icon\`, and \`category\`.
+The \`tool:add\` scaffold already wrote this tool's entry to \`tools.json\`
+(status: \`"building"\`). When the tool is finished, flip \`"status"\` to
+\`"live"\` in \`tools.json\` and run \`npm run validate\` before pushing.
 
 ## License
 
@@ -267,14 +326,30 @@ MIT
 `;
   fs.writeFileSync(path.join(toolDir, 'README.md'), readme);
 
+  const tags = config.tags
+    ? config.tags.split(',').map(s => s.trim()).filter(Boolean)
+    : [];
+  manifest.tools.push({
+    slug: config.slug,
+    name: config.name,
+    description: config.description,
+    icon: config.icon || '🔧',
+    category: config.category,
+    tags,
+    status: 'building',
+  });
+  fs.writeFileSync(path.join(__dirname, '..', 'tools.json'), JSON.stringify(manifest, null, 2) + '\n', 'utf8');
+
   console.log(`✅ Created tool scaffold at tools/${config.slug}/`);
-  console.log(`   - index.html (tool page with shared styling)`);
+  console.log(`   - index.html (shared styling, ${category.name} accent ${colors.accent})`);
   console.log(`   - ${config.slug}.js (tool logic template)`);
   console.log(`   - README.md`);
+  console.log(`   - tools.json entry (slug "${config.slug}", status "building")`);
   console.log(`\n📝 Next steps:`);
   console.log(`   1. Implement your tool logic in ${config.slug}.js`);
-  console.log(`   2. Add entry to tools.json (see existing entries for format)`);
-  console.log(`   3. Test: npx serve tools/${config.slug}`);
+  console.log(`   2. Run: npm run validate`);
+  console.log(`   3. Flip "status" to "live" in tools.json when the tool is ready`);
+  console.log(`   4. Test: npm run serve && open http://localhost:8000/tools/${config.slug}/`);
 }
 
 main();
