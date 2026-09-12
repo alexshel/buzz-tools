@@ -108,7 +108,7 @@ function generateToolHtml(config, colors) {
 
   <noscript><p style="text-align:center;padding:20px">This tool needs JavaScript enabled.</p></noscript>
   <script src="${slug}.js"></script>
-  <script>${slug.charAt(0).toUpperCase() + slug.slice(1)}.init(document);</script>
+  <script>${slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('')}.init(document);</script>
   <script src="../../portal.js"></script>
 </body>
 </html>`;

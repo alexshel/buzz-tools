@@ -7,7 +7,8 @@
     "serve": "python3 -m http.server 8000",
     "tool:add": "node scripts/add-tool.js",
     "validate": "node scripts/validate.js",
-    "smoke": "node scripts/smoke.js"
+    "smoke": "node scripts/smoke.js",
+    "test:converter": "node tools/markdown-html-converter/test.js"
   },
   "devDependencies": {
     "jsdom": "^30.0.1"

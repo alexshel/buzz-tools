@@ -135,10 +135,10 @@ const click = (w, el) => el.dispatchEvent(new w.MouseEvent("click", { bubbles: t
     check("sections: category (design-frontend) rendered", heads.includes("Design & Frontend"));
     check("sections: recent rendered", heads.includes("Recently Added"));
     check("sections: empty category (dev-utilities) skipped", !heads.includes("Developer Utilities"));
-    check("featured shows only live tools (1 of 5 ids live)", qa(w, "a.tool-card").length === 8,
+    check("featured shows live tools (2 of 5 ids live)", qa(w, "a.tool-card").length === 11,
       "got " + qa(w, "a.tool-card").length);
     check("no ad slot without ad section in config", !q(w, ".ad-slot"));
-    check("footer counts 6 tools", (q(w, "footer") || {}).textContent && q(w, "footer").textContent.includes("6 tools"));
+    check("footer counts 7 tools", (q(w, "footer") || {}).textContent && q(w, "footer").textContent.includes("7 tools"));
     check("search box present", q(w, ".portal-search-input"));
   }
 
@@ -147,7 +147,7 @@ const click = (w, el) => el.dispatchEvent(new w.MouseEvent("click", { bubbles: t
     const { w } = await boot(INDEX, { homepage: { sections: [] } });
     check("legacy grid renders 4 category sections", qa(w, ".category-section").length === 4,
       "got " + qa(w, ".category-section").length);
-    check("legacy grid renders all 6 cards", qa(w, "a.tool-card").length === 6);
+    check("legacy grid renders all 7 cards", qa(w, "a.tool-card").length === 7);
     const hero = q(w, "main.home .hero h1");
     check("hero untouched in legacy path", hero.textContent === "Small tools, no strings.");
   }

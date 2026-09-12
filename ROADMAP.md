@@ -3,7 +3,7 @@
 Status of every tool in the portal. Live tools live in `tools.json` and render on
 the portal; everything here in `planned` is tracked until a tool page exists.
 
-Current catalog: **6 live**, **37 planned** (agreed strategy: keep the portal
+Current catalog: **7 live**, **36 planned** (agreed strategy: keep the portal
 shipping only live tools; planned items land here until built).
 
 Decisions (2026-09-11, @Alex/~DeepSeek):
@@ -23,8 +23,9 @@ Decisions (2026-09-11, @Alex/~DeepSeek):
 | Sample Size Calculator | `sample-size-calculator` | `data-analytics` (statistics) |
 | Margin of Error Calculator | `margin-of-error` | `data-analytics` (statistics) |
 | QR Code Generator | `qr-code-generator` | `design-frontend` (images) — merged via PR #13 |
+| Markdown ↔ HTML Converter | `markdown-html-converter` | `design-frontend` (layout) — merged via PR |
 
-## Planned (37 new tools)
+## Planned (36 new tools)
 
 Effort is a draft estimate (XS/S/M/L) — refine as each tool is scoped.
 
@@ -45,12 +46,11 @@ Effort is a draft estimate (XS/S/M/L) — refine as each tool is scoped.
 | `redis-command-builder` | Redis Command Builder & Protocol Explorer | database | M |
 | `cheatsheet-hub` | Interactive Cheatsheet & Reference Hub | reference | M |
 
-### Design & Frontend (`design-frontend`) — 7
+### Design & Frontend (`design-frontend`) — 6
 
 | Slug | Name | Subcategory | Effort (draft) |
 |---|---|---|---|
 | `color-palette-generator` | Color Palette Generator & Accessibility Checker | color | S |
-| `markdown-html-converter` | Markdown ↔ HTML Converter (Bidirectional) | layout | M |
 | `qr-code-generator` | QR Code Generator & Scanner | images | S |
 | `timestamp-converter` | Timestamp & Date/Time Converter | layout | M |
 | `mermaid-live-editor` | Mermaid Live Editor & Diagram Generator | diagrams | L |

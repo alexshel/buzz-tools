@@ -8,7 +8,12 @@
       "description": "Type any set of letters and instantly see every word you can spell with them — longest first, space-separated.",
       "icon": "🔍",
       "category": "games-fun",
-      "tags": ["word", "puzzle", "dictionary", "anagram"],
+      "tags": [
+        "word",
+        "puzzle",
+        "dictionary",
+        "anagram"
+      ],
       "status": "live"
     },
     {
@@ -17,7 +22,11 @@
       "description": "Enter any word or phrase and scramble its letters — perfect for puzzles, games, or brain-teasers.",
       "icon": "🔀",
       "category": "games-fun",
-      "tags": ["word", "puzzle", "brain-teaser"],
+      "tags": [
+        "word",
+        "puzzle",
+        "brain-teaser"
+      ],
       "status": "live"
     },
     {
@@ -26,7 +35,13 @@
       "description": "Paste content from Word, Google Docs, or any rich-text source and get clean, semantic HTML — no inline styles, no mso cruft.",
       "icon": "→",
       "category": "text-content",
-      "tags": ["html", "converter", "rich-text", "paste", "mso"],
+      "tags": [
+        "html",
+        "converter",
+        "rich-text",
+        "paste",
+        "mso"
+      ],
       "status": "live"
     },
     {
@@ -35,7 +50,13 @@
       "description": "Determine the minimum sample size needed for surveys and experiments — with optional finite population correction.",
       "icon": "📊",
       "category": "data-analytics",
-      "tags": ["statistics", "survey", "sample", "calculator", "research"],
+      "tags": [
+        "statistics",
+        "survey",
+        "sample",
+        "calculator",
+        "research"
+      ],
       "status": "live"
     },
     {
@@ -44,7 +65,12 @@
       "description": "Calculate the margin of error and confidence interval for survey results and sample data.",
       "icon": "±",
       "category": "data-analytics",
-      "tags": ["statistics", "confidence", "survey", "interval"],
+      "tags": [
+        "statistics",
+        "confidence",
+        "survey",
+        "interval"
+      ],
       "status": "live"
     },
     {
@@ -53,7 +79,27 @@
       "description": "Generate QR codes with custom styling — choose module shape, colours, error correction level, add a logo, and export as PNG, SVG, JPEG or WebP.",
       "icon": "▣",
       "category": "design-frontend",
-      "tags": ["qr", "qr-code", "barcode", "image", "export"],
+      "tags": [
+        "qr",
+        "qr-code",
+        "barcode",
+        "image",
+        "export"
+      ],
+      "status": "live"
+    },
+    {
+      "slug": "markdown-html-converter",
+      "name": "Markdown ↔ HTML Converter",
+      "description": "Convert Markdown to HTML and back — a GFM subset with live preview, semantic output, and nothing leaving your browser.",
+      "icon": "⇄",
+      "category": "design-frontend",
+      "tags": [
+        "markdown",
+        "html",
+        "converter",
+        "md"
+      ],
       "status": "live"
     }
   ]
