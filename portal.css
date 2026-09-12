@@ -334,6 +334,10 @@ body {
 }
 .category-section { margin-bottom: 28px; }
 .category-section:last-child { margin-bottom: 0; }
+/* Config-driven homepage placeholder for future in-feed ad slots. Placement is
+   pure data (portal.config.json > homepage.sections with type "ad"); nothing
+   renders until an ad provider fills the slot and unhides it. */
+.ad-slot { display: none; }
 .category-heading {
   font-size: 0.82rem;
   font-weight: 700;

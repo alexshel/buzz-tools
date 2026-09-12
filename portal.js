@@ -40,6 +40,10 @@
   var footer = document.getElementById("site-footer");
   var grid = document.getElementById("tool-grid");
 
+  /* Analytics hook — replaced by setupAnalytics() when enabled via config;
+     a no-op otherwise, so every call site is safe unconditionally. */
+  var track = function () {};
+
   function el(tag, className, text) {
     var node = document.createElement(tag);
     if (className) node.className = className;
@@ -274,29 +278,109 @@
     header.appendChild(inner);
   }
 
-  /* ---- home grid ---- */
+  /* ---- home composition ---- */
 
+  /* One config-driven homepage section: heading + tool card grid. Shared by
+     the legacy renderGrid path and the sections renderer. */
+  function renderSection(title, tools, color) {
+    if (!grid || !tools.length) return null;
+    var section = el("div", "category-section");
+    if (color) section.style.setProperty("--cat-color", color);
+    section.appendChild(el("h2", "category-heading", title));
+    var subgrid = el("div", "category-grid");
+    for (var i = 0; i < tools.length; i++) {
+      var tool = tools[i];
+      var card = el("a", "tool-card");
+      card.href = root + "tools/" + tool.slug + "/";
+      card.appendChild(el("span", "tool-icon", tool.icon || "\uD83E\uDDF0"));
+      card.appendChild(el("h2", "tool-name", tool.name));
+      card.appendChild(el("p", "tool-desc", tool.description));
+      card.appendChild(el("span", "tool-go", "Open tool \u2192"));
+      subgrid.appendChild(card);
+    }
+    section.appendChild(subgrid);
+    grid.appendChild(section);
+    return section;
+  }
+
+  /* Legacy path: every non-empty category in config order (or order of first
+     appearance without a config). Automatic fallback so a homepage without
+     sections keeps working unchanged. */
   function renderGrid(groups) {
     if (!grid) return;
     for (var g = 0; g < groups.length; g++) {
-      var group = groups[g];
-      var section = el("div", "category-section");
-      if (group.color) section.style.setProperty("--cat-color", group.color);
-      section.appendChild(el("h2", "category-heading", group.name));
-      var subgrid = el("div", "category-grid");
-      for (var i = 0; i < group.tools.length; i++) {
-        var tool = group.tools[i];
-        var card = el("a", "tool-card");
-        card.href = root + "tools/" + tool.slug + "/";
-        card.appendChild(el("span", "tool-icon", tool.icon || "\uD83E\uDDF0"));
-        card.appendChild(el("h2", "tool-name", tool.name));
-        card.appendChild(el("p", "tool-desc", tool.description));
-        card.appendChild(el("span", "tool-go", "Open tool \u2192"));
-        subgrid.appendChild(card);
-      }
-      section.appendChild(subgrid);
-      grid.appendChild(section);
+      renderSection(groups[g].name, groups[g].tools, groups[g].color);
     }
+  }
+
+  /* Config-driven homepage: portal.config.json > homepage.sections decides
+     the exact composition and order. Types: hero (syncs the static copy),
+     featured (toolIds in order), category (by categoryId, respects limit),
+     recent (last N visible, manifest order), ad (empty hook slot — a future
+     ad provider renders into it; nothing shows until then). Unknown or empty
+     sections are skipped. */
+  function renderSections(sections, groups, visible, track) {
+    if (!grid) return;
+    var byId = Object.create(null);
+    for (var g = 0; g < groups.length; g++) byId[groups[g].id] = groups[g];
+
+    for (var s = 0; s < sections.length; s++) {
+      var sec = sections[s];
+      if (!sec || !sec.type) continue;
+      if (sec.type === "hero") { renderHeroSync(sec); continue; }
+      if (sec.type === "ad") { renderAdSlot(sec); continue; }
+
+      var title = typeof sec.title === "string" ? sec.title : "";
+      var limit = typeof sec.limit === "number" && sec.limit > 0 ? sec.limit : 0;
+      var cards = null;
+      var color = null;
+
+      if (sec.type === "featured") {
+        var ids = Array.isArray(sec.toolIds) ? sec.toolIds : [];
+        cards = [];
+        for (var i = 0; i < ids.length; i++) {
+          var t = null;
+          for (var j = 0; j < visible.length; j++) {
+            if (visible[j].slug === ids[i]) { t = visible[j]; break; }
+          }
+          if (t) cards.push(t);
+        }
+        if (!cards.length) continue; /* nothing live in the featured list yet */
+      } else if (sec.type === "category") {
+        var grp = byId[sec.categoryId];
+        if (!grp || !grp.tools.length) continue;
+        cards = grp.tools;
+        color = grp.color;
+        if (!title) title = grp.name;
+        track("categoryView", { category: sec.categoryId });
+      } else if (sec.type === "recent") {
+        cards = limit ? visible.slice(-limit) : visible.slice();
+        if (!cards.length) continue;
+      } else {
+        continue;
+      }
+      renderSection(title, cards, color);
+    }
+  }
+
+  /* Sync the static hero in index.html with config copy. Without sections
+     config the hardcoded hero stays as-is. */
+  function renderHeroSync(sec) {
+    var mainEl = document.querySelector("main.home");
+    if (!mainEl) return;
+    var h = mainEl.querySelector(".hero h1");
+    if (h && typeof sec.title === "string" && sec.title) h.textContent = sec.title;
+    var p = mainEl.querySelector(".hero .tagline");
+    if (p && typeof sec.subtitle === "string" && sec.subtitle) p.textContent = sec.subtitle;
+  }
+
+  /* Ad slot hook: renders an empty, hidden container. A future ad provider
+     fills the slot and unhides it — placement stays pure config
+     (portal.config.json), providers never touch page or shell code. */
+  function renderAdSlot(sec) {
+    var slot = el("div", "ad-slot");
+    slot.setAttribute("data-ad-slot", typeof sec.id === "string" ? sec.id : "default");
+    grid.appendChild(slot);
   }
 
   function renderFooter(groups) {
@@ -310,7 +394,7 @@
 
   /* ---- search (Fuse.js, vendored; degradates to substring matching) ---- */
 
-  function setupSearch(config, groups) {
+  function setupSearch(config, groups, track) {
     if (!config || !config.search || config.search.enabled === false) return;
     var inner = header && header.querySelector(".site-header-inner");
     if (!inner) return;
@@ -418,6 +502,8 @@
       var q = input.value;
       if (q.trim().length < min) return clear();
       show(search(q));
+      /* analytics hook — the query text itself never leaves the browser. */
+      track("search");
     });
 
     input.addEventListener("keydown", function (e) {
@@ -442,6 +528,80 @@
     }
   }
 
+  /* ---- analytics (opted-in per config; off by default) ----
+     portal.config.json > analytics decides everything:
+       enabled   must be true to switch on (default false → no listeners,
+                 no localStorage writes, zero overhead)
+       endpoint  collector URL; empty = events stay buffered locally, never sent
+       events    per-event switches for toolOpen / toolComplete / search /
+                 categoryView (absent or true = on, false = off)
+     What leaves the browser: only tool slugs, category ids and timestamps —
+     no search query text, no PII, no cookies. Events are buffered in
+     localStorage (capped) and flushed as a single sendBeacon batch on page
+     hide and when the buffer fills. Tool pages can report completion:
+       document.dispatchEvent(new CustomEvent("buzz:tool-complete",
+         { detail: { tool: "my-slug" } }));  */
+  function setupAnalytics(config) {
+    var cfg = config && config.analytics;
+    if (!cfg || cfg.enabled !== true) return;               /* off by default */
+    var sw = cfg.events || {};
+    var endpoint = typeof cfg.endpoint === "string" ? cfg.endpoint.trim() : "";
+    var KEY = "buzz-tools.analytics.v1";
+    var BATCH = 20;
+    var MAX = 200;
+
+    function readBuffer() {
+      try { return JSON.parse(localStorage.getItem(KEY) || "[]"); }
+      catch (e) { return []; }
+    }
+    function writeBuffer(buf) {
+      try { localStorage.setItem(KEY, JSON.stringify(buf.slice(-MAX))); } catch (e) {}
+    }
+    function flush() {
+      if (!endpoint) return;                                /* buffer only */
+      var buf = readBuffer();
+      if (!buf.length) return;
+      var ok = false;
+      try {
+        ok = navigator.sendBeacon(endpoint,
+          new Blob([JSON.stringify(buf)], { type: "application/json" }));
+      } catch (e) { ok = false; }
+      if (ok) writeBuffer([]);   /* clear on success; keep the tail otherwise */
+    }
+    function record(type, data) {
+      if (sw[type] === false) return;
+      var buf = readBuffer();
+      buf.push({ e: type, d: data || {}, t: Math.floor(Date.now() / 1000) });
+      var full = buf.length >= BATCH;
+      writeBuffer(buf);
+      if (full) flush();
+    }
+
+    window.addEventListener("pagehide", flush);
+    window.addEventListener("visibilitychange", function () {
+      if (document.hidden || document.visibilityState === "hidden") flush();
+    });
+
+    /* toolOpen: any shell link that points at a tool page — home cards,
+       mega menu, mobile drawer, search results. */
+    document.addEventListener("click", function (e) {
+      var node = e.target;
+      var a = node && node.closest
+        ? node.closest("a.tool-card, a.mega-link, a.mobile-link, a.portal-search-result")
+        : null;
+      if (!a) return;
+      var m = /\/(?:tools\/)?([a-z0-9-]+)\/?$/.exec(a.getAttribute("href") || "");
+      if (m) record("toolOpen", { tool: m[1] });
+    });
+
+    /* toolComplete: opt-in, dispatched by tool pages (see module comment). */
+    document.addEventListener("buzz:tool-complete", function (e) {
+      if (e && e.detail && e.detail.tool) record("toolComplete", { tool: e.detail.tool });
+    });
+
+    track = record;
+  }
+
   /* small helper used by the header renderer */
   function isCurrent(href) {
     try {
@@ -462,10 +622,17 @@
       var config = pair[1];
       var idx = indexCategories(config);
       var groups = groupTools(manifest.tools || [], idx);
+      var visible = (manifest.tools || []).filter(isVisible);
+      var sections = config && config.homepage && Array.isArray(config.homepage.sections)
+        ? config.homepage.sections
+        : null;
+
+      setupAnalytics(config);
       renderHeader(manifest, groups, config);
-      renderGrid(groups);
+      if (sections && sections.length) renderSections(sections, groups, visible, track);
+      else renderGrid(groups);
       renderFooter(groups);
-      setupSearch(config, groups);
+      setupSearch(config, groups, track);
     })
     .catch(function (err) {
       /* Keep the shell usable even if tools.json can't load. */
