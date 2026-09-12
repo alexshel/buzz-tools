@@ -6,6 +6,10 @@
   "scripts": {
     "serve": "python3 -m http.server 8000",
     "tool:add": "node scripts/add-tool.js",
-    "validate": "node scripts/validate.js"
+    "validate": "node scripts/validate.js",
+    "smoke": "node scripts/smoke.js"
+  },
+  "devDependencies": {
+    "jsdom": "^30.0.1"
   }
 }

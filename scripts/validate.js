@@ -101,6 +101,17 @@ for (const id of sectionToolIds()) {
   if (!slugs.has(id)) warnings.push(`portal.config.json: featured/tool id "${id}" has no tool in tools.json (will render empty).`);
 }
 
+/* ---- analytics schema ---- */
+const an = configFile.analytics;
+if (an) {
+  if (typeof an.enabled !== "boolean") errors.push('portal.config.json: analytics.enabled must be a boolean.');
+  else if (an.enabled === true) {
+    if (typeof an.endpoint !== "string" || !/^https?:\/\//.test(an.endpoint)) {
+      warnings.push('portal.config.json: analytics is enabled but endpoint is missing/not http(s) — events are buffered locally and never sent.');
+    }
+  }
+}
+
 if (!configFile.search || configFile.search.enabled !== false) {
   if (configFile.search && configFile.search.engine && configFile.search.engine !== "fusejs") {
     errors.push(`portal.config.json: unsupported search engine "${configFile.search.engine}".`);

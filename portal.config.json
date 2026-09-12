@@ -159,6 +159,7 @@
   },
   "analytics": {
     "enabled": false,
+    "endpoint": "",
     "events": {
       "toolOpen": true,
       "toolComplete": true,
