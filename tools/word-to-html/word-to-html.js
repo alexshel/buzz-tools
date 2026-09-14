@@ -39,6 +39,14 @@ var WordToHTML = (function () {
 
     var body = doc.body;
 
+    /* 0. Rebuild Word mso-list paragraphs into real <ul>/<ol> lists.
+     * Word exports bulleted/numbered lists as <p> paragraphs carrying
+     * style="mso-list:<id> level<n> <fmt>" plus a marker run. This must run
+     * BEFORE styles/classes are stripped or the level/marker info is lost. */
+    if (opts.normalizeLists !== false) {
+      rebuildMsoLists(body);
+    }
+
     /* 1. Strip inline styles */
     if (opts.stripStyles !== false) {
       var all = body.querySelectorAll("*");
@@ -77,7 +85,22 @@ var WordToHTML = (function () {
       if (kill[n].parentNode) kill[n].parentNode.removeChild(kill[n]);
     }
 
-    /* 4. Strip empty elements (recursive) */
+    /* 4. Remove useless spans (incl. Word spacing runs).
+     * Runs BEFORE empty-element removal so whitespace-only inline spans such
+     * as <span style="mso-spacerun:yes">&nbsp;</span> are unwrapped (their
+     * space text is preserved) instead of being deleted as "empty". */
+    var spans = body.querySelectorAll("span");
+    for (var r = 0; r < spans.length; r++) {
+      var span = spans[r];
+      var isSpacerun = /mso-spacerun/i.test(span.getAttribute("style") || "");
+      if (isSpacerun ||
+          (!span.hasAttribute("style") && !span.hasAttribute("class") &&
+           !span.hasAttribute("id"))) {
+        unwrap(span);
+      }
+    }
+
+    /* 5. Strip empty elements (recursive) */
     if (opts.removeEmpty !== false) {
       var emptyTags = ["p","span","div","h1","h2","h3","h4","h5","h6",
                        "li","th","td","strong","em","u","ins","sub","sup"];
@@ -95,15 +118,6 @@ var WordToHTML = (function () {
             }
           }
         }
-      }
-    }
-
-    /* 5. Remove useless spans */
-    var spans = body.querySelectorAll("span");
-    for (var r = 0; r < spans.length; r++) {
-      var span = spans[r];
-      if (!span.hasAttribute("style") && !span.hasAttribute("class") && !span.hasAttribute("id")) {
-        unwrap(span);
       }
     }
 
@@ -125,6 +139,174 @@ var WordToHTML = (function () {
 
     result = result.replace(/\n{3,}/g, "\n\n").trim();
     return result || "<p><em>Cleaned content is empty.</em></p>\n";
+  }
+
+  /* ── Word mso-list reconstruction ────────────────────────
+   * Word's most common list export is NOT <ul>/<ol> but a sequence of
+   * <p> paragraphs like:
+   *   <p class="MsoListParagraph" style="mso-list:l0 level1 lfo1">
+   *     <span style="mso-list:Ignore">·<span …>&nbsp;</span></span>Milk</p>
+   * The "mso-list:levelN" style carries INDENT level (nesting) and the
+   * mso-list:Ignore span carries the visible marker ("·" for bullets,
+   * "1." / "a)" for numbers). We rebuild these into real <ul>/<ol><li>. */
+
+  function rebuildMsoLists(body) {
+    var cands = body.querySelectorAll("p, div, td");
+    var parents = [], seen = {};
+    for (var i = 0; i < cands.length; i++) {
+      if (!msoListInfo(cands[i])) continue;
+      var pr = cands[i].parentNode;
+      if (pr && pr.nodeType === 1 && !seen[pr] &&
+          !/^(ul|ol|li)$/i.test(pr.tagName)) {
+        seen[pr] = 1;
+        parents.push(pr);
+      }
+    }
+    for (var j = 0; j < parents.length; j++) {
+      var runs = findListRuns(parents[j]);
+      for (var k = 0; k < runs.length; k++) {
+        if (runs[k].items.length > 0) buildListRun(runs[k]);
+      }
+    }
+  }
+
+  function msoListInfo(el) {
+    if (el.nodeType !== 1) return null;
+    var st = (el.getAttribute("style") || "").toLowerCase();
+    var m = /mso-list\s*:\s*([^;]+)/.exec(st);
+    if (!m) return null;
+    var parts = m[1].split(/\s+/);
+    var level = 1;
+    for (var i = 0; i < parts.length; i++) {
+      var lm = /^level(\d+)$/i.exec(parts[i]);
+      if (lm) level = parseInt(lm[1], 10);
+    }
+    return { level: level > 0 ? level : 1 };
+  }
+
+  /* Consecutive sibling list items (only whitespace text between them) form a run. */
+  function findListRuns(parent) {
+    var runs = [], cur = null;
+    var kids = parent.childNodes;
+    for (var i = 0; i < kids.length; i++) {
+      var n = kids[i];
+      if (n.nodeType === 1) {
+        var info = msoListInfo(n);
+        if (info) {
+          if (!cur) { cur = { parent: parent, items: [] }; runs.push(cur); }
+          cur.items.push({ el: n, info: info });
+        } else {
+          cur = null;
+        }
+      } else if (n.nodeType === 3) {
+        if ((n.textContent || "").replace(/\s+/g, "") !== "") cur = null;
+      }
+      /* comments / other node types don't break a run */
+    }
+    return runs;
+  }
+
+  function buildListRun(run) {
+    var doc = run.parent.ownerDocument;
+    var rootType = guessType(run.items[0].el);
+    var root = null;
+    var containers = {};  /* level (1-based) -> container element */
+    var lastLi = {};      /* level (1-based) -> last li appended at that level */
+    var curMax = 0;
+    for (var i = 0; i < run.items.length; i++) {
+      var it = run.items[i];
+      var L = it.info.level;
+      if (L > curMax) {
+        for (var lvl = curMax + 1; lvl <= L; lvl++) {
+          var list = doc.createElement(lvl === 1 ? rootType : guessType(it.el));
+          if (lvl === 1) {
+            root = list;
+            if (run.items[0].el.parentNode) {
+              run.parent.insertBefore(list, run.items[0].el);
+            } else {
+              run.parent.appendChild(list);
+            }
+          } else {
+            if (!lastLi[lvl - 1]) {
+              /* anchor so deeper levels have a parent li to nest inside */
+              var anchor = doc.createElement("li");
+              containers[lvl - 1].appendChild(anchor);
+              lastLi[lvl - 1] = anchor;
+            }
+            lastLi[lvl - 1].appendChild(list);
+          }
+          containers[lvl] = list;
+          lastLi[lvl] = null;
+        }
+        curMax = L;
+      } else if (L < curMax) {
+        /* deeper containers belong to the previous branch; drop so a later
+         * revisit at this level builds a fresh nested list under the current li */
+        for (var d = L + 1; d <= curMax; d++) { delete containers[d]; delete lastLi[d]; }
+        curMax = L;
+      }
+      var li = doc.createElement("li");
+      li.appendChild(cleanListItem(it.el, guessType(it.el)));
+      containers[L].appendChild(li);
+      lastLi[L] = li;
+      if (it.el.parentNode) it.el.parentNode.removeChild(it.el);
+    }
+    return root;
+  }
+
+  /* The marker run's text tells bullet vs number: "·" → ul, "1." / "a)" → ol. */
+  function guessType(el) {
+    var t = (markerText(el) || "").replace(/[\u00a0\t\r\n]+/g, " ").trim();
+    if (/^(?:\d+[.)]|\(\d+\)|[a-zA-Z][.)]|\([a-zA-Z]\))$/.test(t)) return "ol";
+    return "ul";
+  }
+
+  function markerText(el) {
+    var spans = el.querySelectorAll("span");
+    for (var i = 0; i < spans.length; i++) {
+      if (/mso-list\s*:\s*ignore/i.test(spans[i].getAttribute("style") || "")) {
+        return spans[i].textContent || "";
+      }
+    }
+    return "";
+  }
+
+  /* Keep the paragraph's real content; drop presentational junk: Word marker
+   * runs (mso-list:Ignore, Symbol/Wingdings fonts), Word comments and <o:p>
+   * wrappers (unwrap those so their text survives). */
+  function cleanListItem(el, type) {
+    var frag = el.ownerDocument.createDocumentFragment();
+    var kids = Array.prototype.slice.call(el.childNodes);
+    for (var i = 0; i < kids.length; i++) {
+      var n = kids[i];
+      if (n.nodeType === 8) continue;               /* <!--[if !supportLists]--> */
+      if (n.nodeType === 1) {
+        var tag = n.tagName.toLowerCase();
+        if (tag.indexOf(":") !== -1) {              /* <o:p>…</o:p> → keep text */
+          while (n.firstChild) frag.appendChild(n.firstChild);
+          continue;
+        }
+        var stl = (n.getAttribute("style") || "").toLowerCase();
+        if (/mso-list\s*:\s*ignore/.test(stl) ||
+            (/font-family\s*:/i.test(stl) && /symbol|wingdings/i.test(stl))) {
+          continue;                                 /* marker run */
+        }
+      }
+      frag.appendChild(n);
+    }
+    /* Unordered items whose marker survived as an inlined char (Symbol-font
+     * variant): drop a leading bullet symbol so the <ul> renders its own. */
+    if (type === "ul") {
+      var first = frag.firstChild;
+      while (first && first.nodeType !== 3 && !(first.nodeType === 1 && first.childNodes.length)) {
+        first = first.nextSibling;
+      }
+      if (first && first.nodeType === 3) {
+        first.textContent = (first.textContent || "").replace(/^[\u00a0 ]*[·•▪◦§●○‣►◄]/g, "");
+        if (!first.textContent) frag.removeChild(first);
+      }
+    }
+    return frag;
   }
 
   /* ── serializers ────────────────────────────────────────── */
