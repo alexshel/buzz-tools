@@ -2,8 +2,10 @@
  * All client-side, no data sent anywhere.
  *
  * Pure engine: Myers O(ND) line diff + word-level inline highlighting +
- * aligned render rows. UI: two editable panels with renameable labels,
- * Compare button / Ctrl+Cmd+Enter re-run.
+ * aligned render rows. UI: two panes that ARE the diff — each pane is an
+ * editable textarea with a line-number gutter and a diff-highlight layer
+ * rendered behind the text (line + word marks), so comparison happens where
+ * you paste. Compare button / Ctrl+Cmd+Enter re-run.
  */
 var FileComparer = (function () {
   "use strict";
@@ -117,6 +119,25 @@ var FileComparer = (function () {
     return rows;
   }
 
+  /* Per-pane line list from render rows, in pane line order:
+   *   side "a": every row that has a left line (eq/mod/del) → { cls, html }
+   *   side "b": every row that has a right line (eq/mod/ins)
+   * The returned array entries line up 1:1 with that pane's textarea lines. */
+  function buildPaneLines(rows, side) {
+    var lines = [];
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      if (side === "a") {
+        if (r.la == null) continue;
+        lines.push({ cls: r.cls, html: r.ca });
+      } else {
+        if (r.lb == null) continue;
+        lines.push({ cls: r.cls, html: r.cb });
+      }
+    }
+    return lines;
+  }
+
   function escHtml(str) {
     return String(str)
       .replace(/&/g, "&amp;")
@@ -127,8 +148,8 @@ var FileComparer = (function () {
 
   /* ── UI ───────────────────────────────────────────────── */
   var inputA, inputB, nameA, nameB, compareBtn, clearBtn, sampleBtn,
-      status, diffEmpty, diffSection, diffGrid, diffNameA, diffNameB,
-      diffSummary, countAChars, countALines, countBChars, countBLines;
+      status, diffSummary, gutterA, gutterB, fillA, fillB,
+      countAChars, countALines, countBChars, countBLines;
 
   var SAMPLE_A =
     "function formatName(first, last) {\n" +
@@ -156,6 +177,10 @@ var FileComparer = (function () {
     "  return \"Hello, \" + name + \"!\";\n" +
     "}\n";
 
+  function lineCount(v) {
+    return v === "" ? 0 : v.split("\n").length;
+  }
+
   function showStatus(msg, isError) {
     status.textContent = msg;
     status.style.color = isError ? "#dc2626" : "";
@@ -164,7 +189,36 @@ var FileComparer = (function () {
   function updateCount(ta, charsEl, linesEl) {
     var v = ta.value;
     charsEl.textContent = v.length.toLocaleString();
-    linesEl.textContent = v === "" ? 0 : v.split("\n").length;
+    linesEl.textContent = lineCount(v).toLocaleString();
+  }
+
+  function renderGutter(gInner, count) {
+    var html = "";
+    for (var i = 1; i <= count; i++) html += '<div class="gn">' + i + "</div>";
+    gInner.innerHTML = html;
+  }
+
+  function renderFill(fEl, lines, side) {
+    var html = "";
+    for (var i = 0; i < lines.length; i++) {
+      var l = lines[i];
+      html += '<div class="ln ' + side + " " + l.cls + '">' + l.html + "</div>";
+    }
+    fEl.innerHTML = html;
+  }
+
+  function syncScrolls(ta, gInner, fEl) {
+    gInner.style.transform = "translateY(" + (-ta.scrollTop) + "px)";
+    fEl.style.transform = "translate(" + (-ta.scrollLeft) + "px," + (-ta.scrollTop) + "px)";
+  }
+
+  /* an edit invalidates the diff highlights → drop them + refresh gutter/counts */
+  function onPaneInput(ta, gInner, charsEl, linesEl, side) {
+    updateCount(ta, charsEl, linesEl);
+    renderGutter(gInner, lineCount(ta.value));
+    (side === "a" ? fillA : fillB).innerHTML = "";
+    diffSummary.textContent = "";
+    showStatus("Edited — press Compare (or Ctrl/Cmd+Enter) to re-run the diff.");
   }
 
   function storeName(key, value) {
@@ -180,25 +234,6 @@ var FileComparer = (function () {
   function syncNames() {
     storeName("nameA", nameA.value);
     storeName("nameB", nameB.value);
-    diffNameA.textContent = nameA.value;
-    diffNameB.textContent = nameB.value;
-  }
-
-  function renderRows(rows) {
-    var html = "";
-    for (var i = 0; i < rows.length; i++) {
-      var r = rows[i];
-      html += '<span class="ln">' + (r.la || "") + "</span>"
-            + '<span class="lc a ' + r.cls + '">' + r.ca + "</span>"
-            + '<span class="ln">' + (r.lb || "") + "</span>"
-            + '<span class="lc b ' + r.cls + '">' + r.cb + "</span>";
-    }
-    diffGrid.innerHTML = html;
-  }
-
-  function showDiff(show) {
-    diffEmpty.style.display = show ? "none" : "flex";
-    diffSection.hidden = !show;
   }
 
   function compare() {
@@ -210,8 +245,10 @@ var FileComparer = (function () {
     var aLines = a.split("\n"), bLines = b.split("\n");
     var rows = buildRows(diffLines(aLines, bLines), aLines, bLines);
     var st = rows.stats;
-    renderRows(rows);
-    showDiff(true);
+    renderFill(fillA, buildPaneLines(rows, "a"), "a");
+    renderFill(fillB, buildPaneLines(rows, "b"), "b");
+    renderGutter(gutterA, aLines.length);
+    renderGutter(gutterB, bLines.length);
 
     if (st.changed + st.added + st.removed === 0) {
       diffSummary.textContent = "No differences — the texts are identical.";
@@ -228,8 +265,11 @@ var FileComparer = (function () {
     inputB.value = "";
     updateCount(inputA, countAChars, countALines);
     updateCount(inputB, countBChars, countBLines);
-    showDiff(false);
-    renderRows([]);
+    renderGutter(gutterA, 0);
+    renderGutter(gutterB, 0);
+    fillA.innerHTML = "";
+    fillB.innerHTML = "";
+    diffSummary.textContent = "";
     showStatus("");
     inputA.focus();
   }
@@ -239,7 +279,11 @@ var FileComparer = (function () {
     inputB.value = SAMPLE_B;
     updateCount(inputA, countAChars, countALines);
     updateCount(inputB, countBChars, countBLines);
-    showDiff(false);
+    renderGutter(gutterA, lineCount(SAMPLE_A));
+    renderGutter(gutterB, lineCount(SAMPLE_B));
+    fillA.innerHTML = "";
+    fillB.innerHTML = "";
+    diffSummary.textContent = "";
     showStatus("Sample loaded — click Compare or press Ctrl/Cmd+Enter.");
     inputA.focus();
   }
@@ -254,12 +298,11 @@ var FileComparer = (function () {
     clearBtn = doc.getElementById("clear-btn");
     sampleBtn = doc.getElementById("sample-btn");
     status = doc.getElementById("status");
-    diffEmpty = doc.getElementById("diff-empty");
-    diffSection = doc.getElementById("diff-section");
-    diffGrid = doc.getElementById("diff-grid");
-    diffNameA = doc.getElementById("diff-name-a");
-    diffNameB = doc.getElementById("diff-name-b");
     diffSummary = doc.getElementById("diff-summary");
+    gutterA = doc.getElementById("gutter-a");
+    gutterB = doc.getElementById("gutter-b");
+    fillA = doc.getElementById("fill-a");
+    fillB = doc.getElementById("fill-b");
     countAChars = doc.getElementById("count-a-chars");
     countALines = doc.getElementById("count-a-lines");
     countBChars = doc.getElementById("count-b-chars");
@@ -267,21 +310,22 @@ var FileComparer = (function () {
 
     nameA.value = loadName("nameA", "File A");
     nameB.value = loadName("nameB", "File B");
-
     nameA.addEventListener("input", syncNames);
     nameB.addEventListener("input", syncNames);
-    syncNames();
 
-    function bindCount(ta, charsEl, linesEl) {
-      ta.addEventListener("input", function () {
-        updateCount(ta, charsEl, linesEl);
-        showStatus("");
-      });
-    }
-    bindCount(inputA, countAChars, countALines);
-    bindCount(inputB, countBChars, countBLines);
+    inputA.addEventListener("input", function () {
+      onPaneInput(inputA, gutterA, countAChars, countALines, "a");
+    });
+    inputB.addEventListener("input", function () {
+      onPaneInput(inputB, gutterB, countBChars, countBLines, "b");
+    });
+    inputA.addEventListener("scroll", function () { syncScrolls(inputA, gutterA, fillA); });
+    inputB.addEventListener("scroll", function () { syncScrolls(inputB, gutterB, fillB); });
+
     updateCount(inputA, countAChars, countALines);
     updateCount(inputB, countBChars, countBLines);
+    renderGutter(gutterA, lineCount(inputA.value));
+    renderGutter(gutterB, lineCount(inputB.value));
 
     compareBtn.addEventListener("click", compare);
     clearBtn.addEventListener("click", clearAll);
@@ -300,5 +344,5 @@ var FileComparer = (function () {
   }
 
   return { init: init, diffLines: diffLines, wordHighlight: wordHighlight,
-           buildRows: buildRows };
+           buildRows: buildRows, buildPaneLines: buildPaneLines };
 })();

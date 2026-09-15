@@ -126,5 +126,42 @@ eq("interleaved edit", opsStr(FC.diffLines(["1", "2", "3", "4"], ["1", "3", "5",
   has("word diff escaped left", wh.left, "&lt;script&gt;");
 }
 
+/* ── buildPaneLines (per-pane inline render) ── */
+function paneStr(lines) { return lines.map((l) => l.cls).join(" "); }
+{
+  const a = ["keep", "old", "gone"];
+  const b = ["keep", "new", "extra"];
+  const rows = FC.buildRows(FC.diffLines(a, b), a, b);
+  eq("pane a classes (eq+2 mods, 3 lines)", paneStr(FC.buildPaneLines(rows, "a")), "eq mod mod");
+  eq("pane b classes mirror pane a", paneStr(FC.buildPaneLines(rows, "b")), "eq mod mod");
+}
+{
+  const a = ["a", "b"];
+  const b = ["a", "c", "d"];
+  const rows = FC.buildRows(FC.diffLines(a, b), a, b);
+  eq("pane a skips inserted line", paneStr(FC.buildPaneLines(rows, "a")), "eq mod");
+  eq("pane b keeps inserted line", paneStr(FC.buildPaneLines(rows, "b")), "eq mod ins");
+}
+{
+  const rows = FC.buildRows(FC.diffLines(["x", "y"], ["x"]), ["x", "y"], ["x"]);
+  eq("pane a keeps deleted line", paneStr(FC.buildPaneLines(rows, "a")), "eq del");
+  eq("pane b omits deleted line", paneStr(FC.buildPaneLines(rows, "b")), "eq");
+}
+{
+  const rows = FC.buildRows(FC.diffLines([], ["p", "q"]), [], ["p", "q"]);
+  eq("pane a empty on prepended block", paneStr(FC.buildPaneLines(rows, "a")), "");
+  eq("pane b all inserted", paneStr(FC.buildPaneLines(rows, "b")), "ins ins");
+  eq("pane a html stayed empty", FC.buildPaneLines(rows, "a").length, 0);
+}
+{
+  const a = ["price = 100"];
+  const b = ["price = 150"];
+  const rows = FC.buildRows(FC.diffLines(a, b), a, b);
+  const la = FC.buildPaneLines(rows, "a")[0];
+  const lb = FC.buildPaneLines(rows, "b")[0];
+  has("pane a mod carries word-removed mark", la.html, '<span class="wd">100</span>');
+  has("pane b mod carries word-added mark", lb.html, '<span class="wi">150</span>');
+}
+
 console.log("\n" + pass + " passed, " + fail + " failed.");
 process.exit(fail ? 1 : 0);

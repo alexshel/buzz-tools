@@ -6,8 +6,9 @@ Nothing you paste is ever uploaded.
 
 ## Features
 
-- **Side-by-side diff** with line numbers and added / removed / modified
-  highlighting (WinMerge-style block pairing of changed lines).
+- **Side-by-side diff, inline where you paste**: each pane is an editable
+  textarea with its own line-number gutter; after Compare, added / removed /
+  modified lines are highlighted right there (WinMerge-style block pairing).
 - **Word-level inline highlighting** inside changed lines — the exact words
   that changed are marked on each side.
 - **Renameable panel names**: the labels above each pane are editable inputs
