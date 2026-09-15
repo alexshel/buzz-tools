@@ -120,8 +120,10 @@ body {
   position: absolute;
   top: 100%;
   left: 0;
-  min-width: 200px;
-  padding: 8px 0;
+  min-width: 300px;
+  max-height: calc(100vh - var(--header-h) - 16px);
+  overflow-y: auto;
+  padding: 6px 0;
   background: var(--card);
   border: 1px solid var(--rule);
   border-radius: 12px;
@@ -158,9 +160,27 @@ body {
   }
 }
 
+/* category heading inside the single desktop "Tools" menu */
+.mega-cat {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px 4px;
+}
+.mega-cat .cat-label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-soft);
+  opacity: 0.7;
+  gap: 6px;
+}
+.mega-cat .cat-dot { width: 7px; height: 7px; }
+.mega-cat .mega-count { margin-left: 2px; }
+
 .mega-link {
   display: block;
-  padding: 8px 20px;
+  padding: 7px 20px 7px 46px;
   font-size: 0.92rem;
   color: var(--ink-soft);
   text-decoration: none;
@@ -536,11 +556,12 @@ button:focus-visible {
 }
 
 /* ---- search ---- */
+/* wide search field between brand and the Tools menu (desktop) */
 .portal-search {
   position: relative;
-  flex: 1;
-  max-width: 240px;
-  min-width: 130px;
+  flex: 1 1 auto;
+  max-width: 460px;
+  min-width: 0;
 }
 .portal-search-input {
   width: 100%;

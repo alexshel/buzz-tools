@@ -152,51 +152,45 @@
     inner.appendChild(title);
 
     /* ---- desktop mega-menu nav ---- */
+    /* One "Tools" trigger whose dropdown holds every category group. Prevents
+       the old trigger-per-category ribbon from crowding smaller desktop
+       widths; the mobile drawer keeps the full grouped structure. The menu
+       label is config-driven (navigation.desktopMenuLabel), default "Tools". */
     var nav = el("nav", "site-nav-mega");
     nav.setAttribute("aria-label", "Tools");
+    var item = el("div", "mega-item");
+    var trigger = el("button", "mega-trigger");
+    var navLabel = config && config.navigation && typeof config.navigation.desktopMenuLabel === "string"
+      ? config.navigation.desktopMenuLabel
+      : "Tools";
+    trigger.appendChild(document.createTextNode(navLabel));
+
+    var dropdown = el("div", "mega-dropdown");
+    dropdown.setAttribute("role", "menu");
     for (var g = 0; g < groups.length; g++) {
       var group = groups[g];
-      var item = el("div", "mega-item");
-      var trigger = el("button", "mega-trigger");
-      trigger.appendChild(buildLabel(group.name, group.tools.length, group.color, showCounts));
-
-      var dropdown = el("div", "mega-dropdown");
+      var cat = el("div", "mega-cat");
+      cat.appendChild(buildLabel(group.name, group.tools.length, group.color, showCounts));
+      dropdown.appendChild(cat);
       for (var i = 0; i < group.tools.length; i++) {
         var tool = group.tools[i];
         var href = root + "tools/" + tool.slug + "/";
         var link = el("a", "mega-link", tool.name);
         link.href = href;
+        link.setAttribute("role", "menuitem");
         if (isCurrent(href)) link.classList.add("active");
         dropdown.appendChild(link);
       }
-
-      trigger.addEventListener("click", function (e) {
-        e.stopPropagation();
-        var clickedItem = this.closest(".mega-item");
-
-        /* open the clicked item and pin it. It stays open until the cursor
-           enters another item (mouseenter below) or another top item is
-           clicked; the document click handler closes it on an outside click. */
-        var allItems = nav.querySelectorAll(".mega-item");
-        for (var k = 0; k < allItems.length; k++) {
-          if (allItems[k] !== clickedItem) allItems[k].classList.remove("open");
-        }
-        clickedItem.classList.add("open");
-      });
-
-      /* on hover: close any click-pinned open items so only the hovered item's
-         dropdown shows (via the CSS hover rule). */
-      item.addEventListener("mouseenter", function () {
-        var allItems = this.parentNode.querySelectorAll(".mega-item");
-        for (var k = 0; k < allItems.length; k++) {
-          allItems[k].classList.remove("open");
-        }
-      });
-
-      item.appendChild(trigger);
-      item.appendChild(dropdown);
-      nav.appendChild(item);
     }
+
+    trigger.addEventListener("click", function (e) {
+      e.stopPropagation();
+      this.closest(".mega-item").classList.toggle("open");
+    });
+
+    item.appendChild(trigger);
+    item.appendChild(dropdown);
+    nav.appendChild(item);
     inner.appendChild(nav);
 
     /* ---- hamburger + mobile drawer ---- */

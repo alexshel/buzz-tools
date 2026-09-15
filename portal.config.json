@@ -146,6 +146,7 @@
     "maxResults": 20
   },
   "navigation": {
+    "desktopMenuLabel": "Tools",
     "showCategoryCounts": true,
     "showSubcategories": true,
     "mobileBreakpoint": 768

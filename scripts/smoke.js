@@ -127,8 +127,12 @@ const click = (w, el) => el.dispatchEvent(new w.MouseEvent("click", { bubbles: t
   {
     const { w } = await boot(INDEX);
     check("header renders (home)", q(w, ".site-header-inner"));
-    check("mega menu has 5 live categories", qa(w, ".site-nav-mega .mega-item").length === 5,
+    check("desktop nav is one Tools menu", qa(w, ".site-nav-mega .mega-item").length === 1,
       "got " + qa(w, ".site-nav-mega .mega-item").length);
+    check("desktop menu groups 5 categories", qa(w, ".mega-dropdown .mega-cat").length === 5,
+      "got " + qa(w, ".mega-dropdown .mega-cat").length);
+    check("desktop menu lists all 8 tools", qa(w, ".mega-dropdown .mega-link").length === 8,
+      "got " + qa(w, ".mega-dropdown .mega-link").length);
     check("hero stays synced with config copy", q(w, "main.home .hero h1").textContent === "Small tools, no strings.");
     const heads = qa(w, ".tool-grid .category-heading").map((h) => h.textContent);
     check("sections: featured rendered", heads.includes("Featured Tools"), heads.join("|"));
@@ -251,7 +255,7 @@ const click = (w, el) => el.dispatchEvent(new w.MouseEvent("click", { bubbles: t
   {
     const { w } = await boot(TOOL_PAGE, null, "/tools/word-to-html/index.html");
     check("tool page: header + nav render", q(w, ".site-header-inner")
-      && qa(w, ".site-nav-mega .mega-item").length === 5);
+      && qa(w, ".site-nav-mega .mega-item").length === 1);
     check("tool page: full boot chain completes (search renders)", !!q(w, ".portal-search-input"));
     check("tool page: no tool grid, no footer element (by design)",
       !q(w, "#tool-grid") && !q(w, "#site-footer"));
