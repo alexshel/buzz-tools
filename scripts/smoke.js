@@ -127,27 +127,50 @@ const click = (w, el) => el.dispatchEvent(new w.MouseEvent("click", { bubbles: t
   {
     const { w } = await boot(INDEX);
     check("header renders (home)", q(w, ".site-header-inner"));
-    check("mega menu has 4 live categories", qa(w, ".site-nav-mega .mega-item").length === 4,
+    check("desktop nav is one Tools menu", qa(w, ".site-nav-mega .mega-item").length === 1,
       "got " + qa(w, ".site-nav-mega .mega-item").length);
+    check("desktop menu groups 5 categories", qa(w, ".mega-dropdown .mega-cat").length === 5,
+      "got " + qa(w, ".mega-dropdown .mega-cat").length);
+    check("desktop menu lists all 8 tools", qa(w, ".mega-dropdown .mega-link").length === 8,
+      "got " + qa(w, ".mega-dropdown .mega-link").length);
     check("hero stays synced with config copy", q(w, "main.home .hero h1").textContent === "Small tools, no strings.");
     const heads = qa(w, ".tool-grid .category-heading").map((h) => h.textContent);
     check("sections: featured rendered", heads.includes("Featured Tools"), heads.join("|"));
     check("sections: category (design-frontend) rendered", heads.includes("Design & Frontend"));
     check("sections: recent rendered", heads.includes("Recently Added"));
-    check("sections: empty category (dev-utilities) skipped", !heads.includes("Developer Utilities"));
-    check("featured shows live tools (2 of 5 ids live)", qa(w, "a.tool-card").length === 11,
+    check("sections: category (dev-utilities) rendered", heads.includes("Developer Utilities"), heads.join("|"));
+    const duSection = qa(w, ".category-section").find((s) => s.querySelector(".category-heading")
+      && s.querySelector(".category-heading").textContent === "Developer Utilities");
+    check("dev-utilities section shows its 1 live tool", !!duSection
+      && duSection.querySelectorAll("a.tool-card").length === 1, "cards: "
+      + (duSection ? duSection.querySelectorAll("a.tool-card").length : 0));
+    check("homepage renders 13 live tool cards", qa(w, "a.tool-card").length === 13,
       "got " + qa(w, "a.tool-card").length);
     check("no ad slot without ad section in config", !q(w, ".ad-slot"));
-    check("footer counts 7 tools", (q(w, "footer") || {}).textContent && q(w, "footer").textContent.includes("7 tools"));
+    check("footer counts 8 tools", (q(w, "footer") || {}).textContent && q(w, "footer").textContent.includes("8 tools"));
     check("search box present", q(w, ".portal-search-input"));
+  }
+
+  /* 1b. A config section pointing at an empty category is skipped */
+  {
+    const { w } = await boot(INDEX, {
+      homepage: { sections: [
+        { id: "dev-utilities", type: "category", title: "Developer Utilities", categoryId: "dev-utilities", layout: "grid", limit: 6 },
+        { id: "infra", type: "category", title: "Empty Category Slot", categoryId: "infrastructure", layout: "grid", limit: 6 },
+        { id: "design-frontend", type: "category", title: "Design & Frontend", categoryId: "design-frontend", layout: "grid", limit: 4 }
+      ] }
+    });
+    const heads = qa(w, ".tool-grid .category-heading").map((h) => h.textContent);
+    check("empty category section skipped", heads.includes("Developer Utilities")
+      && !heads.includes("Empty Category Slot") && heads.includes("Design & Frontend"), heads.join("|"));
   }
 
   /* 2. Legacy fallback when sections config is empty */
   {
     const { w } = await boot(INDEX, { homepage: { sections: [] } });
-    check("legacy grid renders 4 category sections", qa(w, ".category-section").length === 4,
+    check("legacy grid renders 5 category sections", qa(w, ".category-section").length === 5,
       "got " + qa(w, ".category-section").length);
-    check("legacy grid renders all 7 cards", qa(w, "a.tool-card").length === 7);
+    check("legacy grid renders all 8 cards", qa(w, "a.tool-card").length === 8);
     const hero = q(w, "main.home .hero h1");
     check("hero untouched in legacy path", hero.textContent === "Small tools, no strings.");
   }
@@ -232,7 +255,7 @@ const click = (w, el) => el.dispatchEvent(new w.MouseEvent("click", { bubbles: t
   {
     const { w } = await boot(TOOL_PAGE, null, "/tools/word-to-html/index.html");
     check("tool page: header + nav render", q(w, ".site-header-inner")
-      && qa(w, ".site-nav-mega .mega-item").length === 4);
+      && qa(w, ".site-nav-mega .mega-item").length === 1);
     check("tool page: full boot chain completes (search renders)", !!q(w, ".portal-search-input"));
     check("tool page: no tool grid, no footer element (by design)",
       !q(w, "#tool-grid") && !q(w, "#site-footer"));

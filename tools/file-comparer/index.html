@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>File &amp; Text Comparer — Buzz Tools</title>
+<link rel="stylesheet" href="../../portal.css">
+<style>
+  /* Shared chrome (tokens incl. accent/button color, body base, h1,
+     .subtitle, button, .btn-ghost, .status, .foot) comes from portal.css per
+     the shared-theme contract (#17): pages must NOT redeclare tokens or
+     element chrome. Only tool-specific rules live here, with plain selectors
+     so the injected header controls keep winning. */
+
+  .workbench { max-width: 1280px; margin: 0 auto; }
+
+  .split-layout {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr) 40px minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
+  }
+  .cm-col-spacer { min-width: 0; }  /* keeps headers aligned over the editors */
+
+  .pane-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+
+  /* editor row: change-map column + the two panes, all same height, with a
+     middle column holding the scroll-lock toggle between the panes */
+  .editor-row {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr) 40px minmax(0, 1fr);
+    gap: 24px;
+    align-items: stretch;
+    margin-top: 12px;
+  }
+  .editor-row > .editor { min-width: 0; }
+  .panel-name {
+    font-size: 1.02rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: 2px 6px;
+    margin: -2px -6px;
+    width: 46%;
+    font-family: inherit;
+  }
+  .panel-name:hover { border-color: var(--rule); }
+  .panel-name:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--ring); background: var(--bg); }
+  .pane-badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+
+  /* ---- inline editor: line-number gutter + diff fill behind the textarea ---- */
+  .editor {
+    --gut: 3.4em;
+    position: relative;
+    height: clamp(280px, 44vh, 500px);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    background: var(--bg);
+    overflow: hidden;
+  }
+  .editor:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--ring); }
+
+  .gutter {
+    position: absolute;
+    top: 0; bottom: 0; left: 0;
+    width: var(--gut);
+    overflow: hidden;
+    background: var(--card);
+    border-right: 1px solid var(--rule);
+    color: var(--ink-soft);
+    text-align: right;
+    user-select: none;
+    -webkit-user-select: none;
+    z-index: 1;
+  }
+  .gutter-inner { padding: 12px 0 14px; will-change: transform; }
+  .gutter .gn { padding-right: 8px; white-space: nowrap; }
+
+  .edit-stack {
+    position: absolute;
+    top: 0; right: 0; bottom: 0; left: var(--gut);
+    overflow: hidden;
+  }
+  .editor textarea,
+  .editor .fill,
+  .editor .gutter-inner {
+    font-family: "SF Mono", "Cascadia Code", "Consolas", monospace;
+    font-size: 0.84rem;
+    line-height: 1.5;
+  }
+  .editor textarea {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    margin: 0;
+    padding: 12px 14px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    resize: none;
+    overflow: auto;
+    white-space: pre;
+    color: var(--ink);
+    caret-color: var(--ink);
+  }
+  .editor textarea:focus { outline: none; box-shadow: none; }
+  .editor textarea::placeholder { color: var(--ink-soft); opacity: 0.7; }
+  /* always-visible scrollbars: macOS overlay scrollbars otherwise hide the
+     horizontal bar until scrolling starts — a visible bar also shows how wide
+     the longest line is and how far it can be scrolled. Only the ::-webkit
+     pseudo rules are used: Chrome/Safari switch to classic non-overlay bars
+     the moment the pseudo is styled, while setting the standard
+     `scrollbar-width` instead re-enables overlay on macOS Chrome. */
+  .editor textarea::-webkit-scrollbar { width: 10px; height: 10px; }
+  .editor textarea::-webkit-scrollbar-track { background: transparent; }
+  .editor textarea::-webkit-scrollbar-thumb {
+    background: var(--ink-soft);
+    border-radius: 5px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  .editor textarea::-webkit-scrollbar-thumb:hover { background: var(--ink); }
+  .editor textarea::-webkit-scrollbar-corner { background: transparent; }
+  .editor .fill {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    padding: 12px 14px;
+    white-space: pre;
+    color: transparent;
+    pointer-events: none;
+    will-change: transform;
+    transform-origin: 0 0;
+  }
+  /* per-line highlight wash (the textarea's real text sits on top).
+     min-height: 1.5em pins an empty diff line to one full row (font 0.84rem
+     × line-height 1.5 = 1.26rem): without it an empty line collapses to
+     height 0 and every highlight below it shifts up by a row. */
+  .fill .ln { display: block; min-width: 100%; min-height: 1.5em; }
+
+  /*  changed ("mod") rows: amber on BOTH panes — matches the legend and the
+      change-map mod markers. Pure removals stay red (left pane only) and pure
+      additions green (right pane only), exactly as the legend describes. */
+  .fill .ln.a.mod, .fill .ln.b.mod { background: rgba(234, 179, 8, 0.13); }
+  .fill .ln.a.del { background: rgba(239, 68, 68, 0.10); }
+  .fill .ln.b.ins { background: rgba(34, 197, 94, 0.10); }
+  /* word-level marks inside changed lines (no padding → keeps char alignment) */
+  .fill .wd { background: rgba(239, 68, 68, 0.32); border-radius: 3px; }
+  .fill .wi { background: rgba(34, 197, 94, 0.32); border-radius: 3px; }
+
+  /* ---- scroll-lock toggle: round button between the two panes ---- */
+  .lock-col {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+  }
+  .scroll-lock {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    color: var(--ink-soft);
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(16, 24, 40, 0.10);
+    transition: color 120ms ease, background 120ms ease,
+                border-color 120ms ease, box-shadow 120ms ease;
+  }
+  .scroll-lock:hover,
+  .scroll-lock:focus-visible {
+    color: var(--ink);
+    border-color: var(--ink-soft);
+  }
+  .scroll-lock:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--ring); }
+  .scroll-lock[aria-pressed="true"] {
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--ring);
+  }
+
+  /* ---- change map: vertical diff-bar left of the panes ---- */
+  .changemap {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .cm-label {
+    padding: 10px 0 6px;
+    text-align: center;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    border-bottom: 1px solid var(--rule);
+    user-select: none;
+  }
+  .cm-body { position: relative; flex: 1; min-height: 0; }
+  .cm-marker {
+    position: absolute;
+    left: 5px; right: 5px;
+    height: 6px;
+    border-radius: 3px;
+    cursor: pointer;
+    opacity: 0.75;
+    transition: opacity 0.12s ease, transform 0.12s ease;
+  }
+  .cm-marker:hover { opacity: 1; transform: scaleY(1.5); }
+  .cm-marker:focus { outline: none; opacity: 1; box-shadow: 0 0 0 2px var(--ring); }
+  .cm-marker.cm-mod { background: rgba(234, 179, 8, 0.8); }
+  .cm-marker.cm-ins { background: rgba(34, 197, 94, 0.8); }
+  .cm-marker.cm-del { background: rgba(239, 68, 68, 0.8); }
+  .cmp-hint {
+    padding: 8px 4px 6px;
+    text-align: center;
+    font-size: 0.6rem;
+    color: var(--ink-soft);
+    line-height: 1.3;
+    user-select: none;
+    border-top: 1px solid var(--rule);
+  }
+
+  /* ---- resize handle: drag to resize both panes synchronously ---- */
+  .resize-handle {
+    height: 16px;
+    margin: 10px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: ns-resize;
+    border-radius: 8px;
+    color: var(--ink-soft);
+    touch-action: none;
+    user-select: none;
+  }
+  .resize-handle:hover { background: var(--card); color: var(--ink); }
+  .resize-handle .grip {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .resize-handle .grip i { display: block; width: 34px; height: 2px; border-radius: 2px; background: var(--rule); }
+  .resize-handle:hover .grip i { background: var(--accent); }
+  .resize-handle.dragging .grip i { background: var(--accent); }
+  body.resizing { cursor: ns-resize; user-select: none; }
+
+  /* ---- legend, toolbar (centered under the panes), summary ---- */
+  .legend {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin: 24px 0 -8px;
+    flex-wrap: wrap;
+  }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 999px;
+    padding: 3px 10px;
+    white-space: nowrap;
+  }
+  .chip .sw { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+  .sw.changed { background: rgba(234, 179, 8, 0.55); }
+  .sw.added { background: rgba(34, 197, 94, 0.55); }
+  .sw.removed { background: rgba(239, 68, 68, 0.55); }
+
+  .toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 22px 0 0;
+  }
+  .btn-sm { padding: 8px 16px; font-size: 0.92rem; }
+
+  .diff-summary {
+    margin: 14px 0 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--ink);
+    text-align: center;
+  }
+  .status { margin: 6px 0 0; }
+
+  .foot { margin-top: 28px; }
+
+  @media (max-width: 820px) {
+    .split-layout { grid-template-columns: 1fr; gap: 16px; }
+    .cm-col-spacer, .lock-col-spacer { display: none; }
+    .editor-row { grid-template-columns: 1fr; gap: 16px; }
+    .changemap, .lock-col { display: none; }
+    .editor { height: 260px; }
+  }
+</style>
+</head>
+<body class="tool-page">
+  <header id="site-header"></header>
+
+  <div class="workbench">
+    <h1>File &amp; Text Comparer</h1>
+    <p class="subtitle">Paste two pieces of text into the panes and click Compare — line numbers and change highlights appear right in each pane, and the text stays editable for re-runs. The bar on the left maps every difference — click a marker to jump both panes to it — the lock button between the panes keeps both scrolling together (line 1 matching), and you can drag the handle below the panes to resize them together. Panel names are editable too (handy for screenshots). Everything runs in your browser; nothing is ever uploaded.</p>
+
+    <div class="split-layout">
+      <div class="cm-col-spacer" aria-hidden="true"></div>
+      <div class="pane-header">
+        <input id="name-a" class="panel-name" value="File Before" maxlength="40" aria-label="Left panel name" spellcheck="false">
+        <span class="pane-badge"><span id="count-a-chars">0</span> chars · <span id="count-a-lines">0</span> lines</span>
+      </div>
+      <div class="lock-col-spacer" aria-hidden="true"></div>
+      <div class="pane-header">
+        <input id="name-b" class="panel-name" value="File After" maxlength="40" aria-label="Right panel name" spellcheck="false">
+        <span class="pane-badge"><span id="count-b-chars">0</span> chars · <span id="count-b-lines">0</span> lines</span>
+      </div>
+    </div>
+
+    <div class="editor-row">
+      <div class="changemap" id="changemap" aria-hidden="true">
+        <div class="cm-label">diffs</div>
+        <div class="cm-body" id="cm-body"></div>
+        <div class="cmp-hint">click to jump</div>
+      </div>
+
+      <div class="editor" id="editor-a">
+        <div class="gutter" aria-hidden="true"><div class="gutter-inner" id="gutter-a"></div></div>
+        <div class="edit-stack">
+          <pre class="fill" id="fill-a" aria-hidden="true"></pre>
+          <label for="input-a" class="sr-only" hidden>Left text</label>
+          <textarea id="input-a" class="input-box" spellcheck="false" placeholder="Paste the first text here — e.g. the original, or the left side of your comparison."></textarea>
+        </div>
+      </div>
+
+      <div class="lock-col">
+        <button id="scroll-lock" class="scroll-lock" type="button"
+                aria-pressed="false" aria-label="Lock scrolling together"
+                title="Lock scrolling — both panes scroll together, line 1 matching">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="editor" id="editor-b">
+        <div class="gutter" aria-hidden="true"><div class="gutter-inner" id="gutter-b"></div></div>
+        <div class="edit-stack">
+          <pre class="fill" id="fill-b" aria-hidden="true"></pre>
+          <label for="input-b" class="sr-only" hidden>Right text</label>
+          <textarea id="input-b" class="input-box" spellcheck="false" placeholder="Paste the second text here — the modified version, or the right side."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="resize-handle" id="resize-handle" title="Drag to resize both panels together">
+      <span class="grip"><i></i><i></i><i></i></span>
+    </div>
+
+    <div class="legend" aria-hidden="true">
+      <span class="chip"><span class="sw changed"></span>changed</span>
+      <span class="chip"><span class="sw added"></span>added</span>
+      <span class="chip"><span class="sw removed"></span>removed</span>
+    </div>
+
+    <div class="toolbar">
+      <button id="compare-btn" type="button">Compare</button>
+      <button id="sample-btn" class="btn-ghost btn-sm" type="button">Load sample</button>
+      <button id="clear-btn" class="btn-ghost btn-sm" type="button">Clear</button>
+    </div>
+
+    <p id="diff-summary" class="diff-summary" aria-live="polite"></p>
+    <p id="status" class="status" aria-live="polite"></p>
+    <p class="foot">All processing happens in your browser · nothing you paste is ever sent to a server</p>
+  </div>
+
+  <noscript><p style="text-align:center;padding:20px">This tool needs JavaScript enabled.</p></noscript>
+  <script src="file-comparer.js"></script>
+  <script>FileComparer.init(document);</script>
+  <script src="../../portal.js"></script>
+</body>
+</html>

@@ -101,6 +101,21 @@
         "md"
       ],
       "status": "live"
+    },
+    {
+      "slug": "file-comparer",
+      "name": "File & Text Comparer",
+      "description": "Compare two pieces of plain text side-by-side — line and word-level highlighting, editable panels with renameable labels, all in your browser.",
+      "icon": "⇔",
+      "category": "dev-utilities",
+      "tags": [
+        "diff",
+        "compare",
+        "text",
+        "winmerge",
+        "side-by-side"
+      ],
+      "status": "live"
     }
   ]
 }
