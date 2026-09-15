@@ -3,7 +3,7 @@
 Status of every tool in the portal. Live tools live in `tools.json` and render on
 the portal; everything here in `planned` is tracked until a tool page exists.
 
-Current catalog: **7 live**, **36 planned** (agreed strategy: keep the portal
+Current catalog: **8 live**, **36 planned** (agreed strategy: keep the portal
 shipping only live tools; planned items land here until built).
 
 Decisions (2026-09-11, @Alex/~DeepSeek):
@@ -24,6 +24,7 @@ Decisions (2026-09-11, @Alex/~DeepSeek):
 | Margin of Error Calculator | `margin-of-error` | `data-analytics` (statistics) |
 | QR Code Generator | `qr-code-generator` | `design-frontend` (images) — merged via PR #13 |
 | Markdown ↔ HTML Converter | `markdown-html-converter` | `design-frontend` (layout) — merged via PR |
+| File & Text Comparer | `file-comparer` | `dev-utilities` (cli-tools) — WinMerge-style side-by-side diff (plain-text mode) |
 
 ## Planned (36 new tools)
 

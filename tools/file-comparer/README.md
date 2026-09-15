@@ -1,0 +1,46 @@
+# File & Text Comparer
+
+Compare two pieces of plain text side-by-side — line and word-level
+highlighting, editable panels with renameable labels, all in your browser.
+Nothing you paste is ever uploaded.
+
+## Features
+
+- **Side-by-side diff** with line numbers and added / removed / modified
+  highlighting (WinMerge-style block pairing of changed lines).
+- **Word-level inline highlighting** inside changed lines — the exact words
+  that changed are marked on each side.
+- **Renameable panel names**: the labels above each pane are editable inputs
+  (persisted), handy for labelling screenshots.
+- **Comparing is manual**: click **Compare** (or press Ctrl/Cmd+Enter in a
+  panel) to re-run on edited text. Char/line counts update live as you type.
+- Sample + Clear buttons and a change summary (equal · changed · added ·
+  removed).
+- Hand-rolled Myers line-diff engine — no runtime dependencies.
+
+## Scope
+
+**Plain-text comparison only in v1.** Binary "via upload" mode (hex view +
+byte-level diff, read-only) is planned as a follow-up in a later session.
+
+## Usage
+
+Open `index.html` in a browser, or serve it:
+
+```bash
+npm run serve
+# → http://localhost:8000/tools/file-comparer/
+```
+
+## Development
+
+```bash
+npm run serve            # local server
+npm run test:file-comparer   # jsdom unit tests (engine + wiring)
+npm run smoke            # portal shell regression (renders this tool)
+npm run validate         # manifest sanity
+```
+
+## License
+
+MIT
