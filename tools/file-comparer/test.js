@@ -163,5 +163,47 @@ function paneStr(lines) { return lines.map((l) => l.cls).join(" "); }
   has("pane b mod carries word-added mark", lb.html, '<span class="wi">150</span>');
 }
 
+/* ── buildBlocks (change-map block grouping) ── */
+function blockStr(blocks) {
+  return blocks.map((b) => {
+    const la = b.minLa != null ? b.minLa + ".." + b.maxLa : "-";
+    const lb = b.minLb != null ? b.minLb + ".." + b.maxLb : "-";
+    return b.kind + ":" + la + "/" + lb;
+  }).join(" | ");
+}
+{
+  const a = ["keep", "old", "gone"];
+  const b = ["keep", "new", "extra"];
+  const rows = FC.buildRows(FC.diffLines(a, b), a, b);
+  const blocks = FC.buildBlocks(rows);
+  eq("blocks: mod pair → 1 mod block", blockStr(blocks), "mod:2..3/2..3");
+  eq("blocks: mod pair count", blocks.length, 1);
+}
+{
+  const rows = FC.buildRows(FC.diffLines(["x", "y"], ["x"]), ["x", "y"], ["x"]);
+  eq("blocks: pure delete → del block (no B side)", blockStr(FC.buildBlocks(rows)), "del:2..2/-");
+}
+{
+  const rows = FC.buildRows(FC.diffLines(["q"], ["p", "q"]), ["q"], ["p", "q"]);
+  eq("blocks: prepended insert → ins block (no A side)", blockStr(FC.buildBlocks(rows)), "ins:-/1..1");
+}
+{
+  const rows = [
+    { cls: "eq", la: 1, lb: 1 },
+    { cls: "del", la: 5, lb: null }, { cls: "del", la: 6, lb: null },
+    { cls: "ins", la: null, lb: 4 }, { cls: "ins", la: null, lb: 5 },
+    { cls: "eq", la: 9, lb: 9 },
+    { cls: "ins", la: null, lb: 20 }
+  ];
+  const blocks = FC.buildBlocks(rows);
+  eq("blocks: separate regions split", blocks.length, 2);
+  eq("blocks: mixed del+ins becomes mod", blockStr(blocks), "mod:5..6/4..5 | ins:-/20..20");
+}
+{
+  eq("blocks: empty row list → none", FC.buildBlocks([]).length, 0);
+  const rows = FC.buildRows(FC.diffLines(["a", "b"], ["a", "b"]), ["a", "b"], ["a", "b"]);
+  eq("blocks: identical texts → none", FC.buildBlocks(rows).length, 0);
+}
+
 console.log("\n" + pass + " passed, " + fail + " failed.");
 process.exit(fail ? 1 : 0);

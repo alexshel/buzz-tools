@@ -146,10 +146,48 @@ var FileComparer = (function () {
       .replace(/"/g, "&quot;");
   }
 
+  /* Group changed render rows into vertical blocks for the change map.
+   * Each change block: { minLa, maxLa, minLb, maxLb, kind } where kind is
+   * "mod" (contains modified or mixed rows), "del" (removed lines only),
+   * or "ins" (added lines only). Line numbers are 1-based pane line numbers;
+   * a null side means the block only exists on the other side. */
+  function buildBlocks(rows) {
+    var blocks = [];
+    var cur = null;
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      if (r.cls === "eq") { cur = null; continue; }
+      if (!cur) {
+        cur = { minLa: null, maxLa: null, minLb: null, maxLb: null, kind: null };
+        blocks.push(cur);
+      }
+      if (r.la != null) {
+        if (cur.minLa == null || r.la < cur.minLa) cur.minLa = r.la;
+        if (cur.maxLa == null || r.la > cur.maxLa) cur.maxLa = r.la;
+      }
+      if (r.lb != null) {
+        if (cur.minLb == null || r.lb < cur.minLb) cur.minLb = r.lb;
+        if (cur.maxLb == null || r.lb > cur.maxLb) cur.maxLb = r.lb;
+      }
+      /* kind: mod wins; otherwise a mix of del+ins → mod */
+      if (cur.kind !== "mod") {
+        if (r.cls === "mod") cur.kind = "mod";
+        else if (r.cls === "del") cur.kind = cur.kind === "ins" ? "mod" : "del";
+        else if (r.cls === "ins") cur.kind = cur.kind === "del" ? "mod" : "ins";
+      }
+    }
+    return blocks;
+  }
+
   /* ── UI ───────────────────────────────────────────────── */
   var inputA, inputB, nameA, nameB, compareBtn, clearBtn, sampleBtn,
       status, diffSummary, gutterA, gutterB, fillA, fillB,
-      countAChars, countALines, countBChars, countBLines;
+      countAChars, countALines, countBChars, countBLines,
+      editorA, editorB, cmBody, resizeHandle;
+  var lastBlocks = [];          /* change blocks from the latest Compare */
+  var lastLineH = 20;           /* measured pane line height (px) */
+  var EDITOR_H_KEY = "file-comparer.editorH";
+  var EDITOR_H_MIN = 160, EDITOR_H_MAX = 900;
 
   var SAMPLE_A =
     "function formatName(first, last) {\n" +
@@ -217,6 +255,7 @@ var FileComparer = (function () {
     updateCount(ta, charsEl, linesEl);
     renderGutter(gInner, lineCount(ta.value));
     (side === "a" ? fillA : fillB).innerHTML = "";
+    clearChangeMap();
     diffSummary.textContent = "";
     showStatus("Edited — press Compare (or Ctrl/Cmd+Enter) to re-run the diff.");
   }
@@ -236,6 +275,113 @@ var FileComparer = (function () {
     storeName("nameB", nameB.value);
   }
 
+  /* measure the pane line height from the rendered fill (fallback 20px) */
+  function measureLineH() {
+    var l = (fillA && fillA.children[0]) || (fillB && fillB.children[0]);
+    if (l && l.offsetHeight > 0) { lastLineH = l.offsetHeight; return; }
+    var f = fillA || fillB;
+    if (f) { var c = getComputedStyle(f).lineHeight; var n = parseFloat(c); if (n > 0) lastLineH = n; }
+  }
+
+  /* position a change-block's representative line as a fraction of the doc */
+  function blockTopFrac(b, total) {
+    var rep = b.minLa != null ? b.minLa : (b.minLb != null ? b.minLb : 1);
+    return Math.min(1, Math.max(0, (rep - 0.5) / (total || 1)));
+  }
+
+  function clearChangeMap() {
+    cmBody.innerHTML = "";
+    lastBlocks = [];
+  }
+
+  function renderChangeMap(blocks, totalA, totalB) {
+    cmBody.innerHTML = "";
+    lastBlocks = blocks;
+    var total = Math.max(totalA, totalB);
+    var frag = document.createDocumentFragment();
+    for (var i = 0; i < blocks.length; i++) {
+      var b = blocks[i];
+      var m = document.createElement("div");
+      m.className = "cm-marker cm-" + b.kind;
+      m.style.top = (blockTopFrac(b, total) * 100).toFixed(3) + "%";
+      var a = b.minLa != null ? b.minLa : (b.minLb != null ? "—" : "");
+      var c = b.minLb != null ? b.minLb : (b.minLa != null ? "—" : "");
+      m.title = "Jump to diff at line " + a + " / " + c;
+      m.setAttribute("role", "button");
+      m.tabIndex = 0;
+      m.addEventListener("click", function (ev) {
+        scrollToBlock(Number(ev.currentTarget.getAttribute("data-i")));
+      });
+      m.addEventListener("keydown", function (ev) {
+        if (ev.key === "Enter" || ev.key === " ") {
+          ev.preventDefault();
+          scrollToBlock(Number(ev.currentTarget.getAttribute("data-i")));
+        }
+      });
+      m.setAttribute("data-i", String(i));
+      frag.appendChild(m);
+    }
+    cmBody.appendChild(frag);
+  }
+
+  /* scroll both textareas so the chosen diff block is at the top */
+  function scrollToBlock(idx) {
+    var b = lastBlocks[idx];
+    if (!b || !cmBody.children[idx]) return;
+    var aLines = inputA.value.split("\n"), bLines = inputB.value.split("\n");
+    var la = b.minLa, lb = b.minLb;
+    if (la == null) la = Math.max(1, Math.round(((lb || 1) / (bLines.length || 1)) * (aLines.length || 1)));
+    if (lb == null) lb = Math.max(1, Math.round(((la) / (aLines.length || 1)) * (bLines.length || 1)));
+    var maxA = Math.max(0, inputA.scrollHeight - inputA.clientHeight);
+    var maxB = Math.max(0, inputB.scrollHeight - inputB.clientHeight);
+    inputA.scrollTop = Math.min((la - 1) * lastLineH, maxA);
+    inputB.scrollTop = Math.min((lb - 1) * lastLineH, maxB);
+    syncScrolls(inputA, gutterA, fillA);
+    syncScrolls(inputB, gutterB, fillB);
+  }
+
+  /* ---- synchronous panel-height resize (both panes together) ---- */
+  function applyEditorHeight(h) {
+    h = Math.max(EDITOR_H_MIN, Math.min(EDITOR_H_MAX, Math.round(h)));
+    editorA.style.height = h + "px";
+    editorB.style.height = h + "px";
+  }
+  function persistEditorHeight() {
+    storeName("editorH", String(parseFloat(editorA.style.height) || ""));
+  }
+  function setupResize() {
+    var dragging = false, startY = 0, startH = 0;
+    resizeHandle.addEventListener("pointerdown", function (e) {
+      dragging = true;
+      startY = e.clientY;
+      startH = editorA.offsetHeight;
+      resizeHandle.classList.add("dragging");
+      document.body.classList.add("resizing");
+      try { resizeHandle.setPointerCapture(e.pointerId); } catch (err) {}
+      e.preventDefault();
+    });
+    resizeHandle.addEventListener("pointermove", function (e) {
+      if (!dragging) return;
+      applyEditorHeight(startH + (e.clientY - startY));
+    });
+    function endResize() {
+      if (!dragging) return;
+      dragging = false;
+      resizeHandle.classList.remove("dragging");
+      document.body.classList.remove("resizing");
+      persistEditorHeight();
+    }
+    resizeHandle.addEventListener("pointerup", endResize);
+    resizeHandle.addEventListener("pointercancel", endResize);
+  }
+  function restoreEditorHeight() {
+    try {
+      var v = localStorage.getItem(EDITOR_H_KEY);
+      var n = v === null ? NaN : Number(v);
+      if (!isNaN(n) && n >= EDITOR_H_MIN && n <= EDITOR_H_MAX) applyEditorHeight(n);
+    } catch (e) {}
+  }
+
   function compare() {
     var a = inputA.value, b = inputB.value;
     if (!a.trim() || !b.trim()) {
@@ -249,6 +395,8 @@ var FileComparer = (function () {
     renderFill(fillB, buildPaneLines(rows, "b"), "b");
     renderGutter(gutterA, aLines.length);
     renderGutter(gutterB, bLines.length);
+    measureLineH();
+    renderChangeMap(buildBlocks(rows), aLines.length, bLines.length);
 
     if (st.changed + st.added + st.removed === 0) {
       diffSummary.textContent = "No differences — the texts are identical.";
@@ -269,6 +417,7 @@ var FileComparer = (function () {
     renderGutter(gutterB, 0);
     fillA.innerHTML = "";
     fillB.innerHTML = "";
+    clearChangeMap();
     diffSummary.textContent = "";
     showStatus("");
     inputA.focus();
@@ -283,6 +432,7 @@ var FileComparer = (function () {
     renderGutter(gutterB, lineCount(SAMPLE_B));
     fillA.innerHTML = "";
     fillB.innerHTML = "";
+    clearChangeMap();
     diffSummary.textContent = "";
     showStatus("Sample loaded — click Compare or press Ctrl/Cmd+Enter.");
     inputA.focus();
@@ -307,6 +457,10 @@ var FileComparer = (function () {
     countALines = doc.getElementById("count-a-lines");
     countBChars = doc.getElementById("count-b-chars");
     countBLines = doc.getElementById("count-b-lines");
+    editorA = doc.getElementById("editor-a");
+    editorB = doc.getElementById("editor-b");
+    cmBody = doc.getElementById("cm-body");
+    resizeHandle = doc.getElementById("resize-handle");
 
     nameA.value = loadName("nameA", "File A");
     nameB.value = loadName("nameB", "File B");
@@ -330,6 +484,8 @@ var FileComparer = (function () {
     compareBtn.addEventListener("click", compare);
     clearBtn.addEventListener("click", clearAll);
     sampleBtn.addEventListener("click", loadSample);
+    setupResize();
+    restoreEditorHeight();
 
     function keyHandler(e) {
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
@@ -344,5 +500,6 @@ var FileComparer = (function () {
   }
 
   return { init: init, diffLines: diffLines, wordHighlight: wordHighlight,
-           buildRows: buildRows, buildPaneLines: buildPaneLines };
+           buildRows: buildRows, buildPaneLines: buildPaneLines,
+           buildBlocks: buildBlocks };
 })();

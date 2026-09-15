@@ -13,6 +13,13 @@ Nothing you paste is ever uploaded.
   that changed are marked on each side.
 - **Renameable panel names**: the labels above each pane are editable inputs
   (persisted), handy for labelling screenshots.
+- **Change-map navigation**: a slim vertical bar to the left of the panes shows
+  coloured markers where differences are (yellow changed / green added / red
+  removed, scaled to the whole document); click a marker to jump both panes to
+  that difference.
+- **Resizable panels**: drag the handle below the panes to resize them together
+  (persisted between visits; clamped 160–900 px; hidden with the change-map on
+  narrow screens where the panes stack).
 - **Comparing is manual**: click **Compare** (or press Ctrl/Cmd+Enter in a
   panel) to re-run on edited text. Char/line counts update live as you type.
 - Sample + Clear buttons and a change summary (equal · changed · added ·
