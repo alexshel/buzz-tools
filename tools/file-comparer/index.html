@@ -146,9 +146,12 @@
      height 0 and every highlight below it shifts up by a row. */
   .fill .ln { display: block; min-width: 100%; min-height: 1.5em; }
 
-  /*  left pane: modified / removed lines; right pane: modified / added */
-  .fill .ln.a.mod, .fill .ln.a.del { background: rgba(239, 68, 68, 0.10); }
-  .fill .ln.b.mod, .fill .ln.b.ins { background: rgba(34, 197, 94, 0.10); }
+  /*  changed ("mod") rows: amber on BOTH panes — matches the legend and the
+      change-map mod markers. Pure removals stay red (left pane only) and pure
+      additions green (right pane only), exactly as the legend describes. */
+  .fill .ln.a.mod, .fill .ln.b.mod { background: rgba(234, 179, 8, 0.13); }
+  .fill .ln.a.del { background: rgba(239, 68, 68, 0.10); }
+  .fill .ln.b.ins { background: rgba(34, 197, 94, 0.10); }
   /* word-level marks inside changed lines (no padding → keeps char alignment) */
   .fill .wd { background: rgba(239, 68, 68, 0.32); border-radius: 3px; }
   .fill .wi { background: rgba(34, 197, 94, 0.32); border-radius: 3px; }
@@ -325,12 +328,12 @@
     <div class="split-layout">
       <div class="cm-col-spacer" aria-hidden="true"></div>
       <div class="pane-header">
-        <input id="name-a" class="panel-name" value="File A" maxlength="40" aria-label="Left panel name" spellcheck="false">
+        <input id="name-a" class="panel-name" value="File Before" maxlength="40" aria-label="Left panel name" spellcheck="false">
         <span class="pane-badge"><span id="count-a-chars">0</span> chars · <span id="count-a-lines">0</span> lines</span>
       </div>
       <div class="lock-col-spacer" aria-hidden="true"></div>
       <div class="pane-header">
-        <input id="name-b" class="panel-name" value="File B" maxlength="40" aria-label="Right panel name" spellcheck="false">
+        <input id="name-b" class="panel-name" value="File After" maxlength="40" aria-label="Right panel name" spellcheck="false">
         <span class="pane-badge"><span id="count-b-chars">0</span> chars · <span id="count-b-lines">0</span> lines</span>
       </div>
     </div>

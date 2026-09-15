@@ -220,6 +220,16 @@ var FileComparer = (function () {
     return v === "" ? 0 : v.split("\n").length;
   }
 
+  /* Normalize text into diff lines: a trailing "\n" yields one phantom empty
+   * element ("a\nb\n".split("\n") → ["a","b",""]) — drop exactly one so a
+   * plain trailing-newline difference isn't shown as an empty added/removed
+   * line. Genuine blank lines the user typed stay intact. */
+  function splitLines(v) {
+    var parts = v.split("\n");
+    if (parts.length > 1 && parts[parts.length - 1] === "") parts.pop();
+    return parts;
+  }
+
   function showStatus(msg, isError) {
     status.textContent = msg;
     status.style.color = isError ? "#dc2626" : "";
@@ -418,7 +428,7 @@ var FileComparer = (function () {
       showStatus("Paste text into both panels first.", true);
       return;
     }
-    var aLines = a.split("\n"), bLines = b.split("\n");
+    var aLines = splitLines(a), bLines = splitLines(b);
     var rows = buildRows(diffLines(aLines, bLines), aLines, bLines);
     var st = rows.stats;
     renderFill(fillA, buildPaneLines(rows, "a"), "a");
@@ -493,8 +503,8 @@ var FileComparer = (function () {
     resizeHandle = doc.getElementById("resize-handle");
     scrollLockBtn = doc.getElementById("scroll-lock");
 
-    nameA.value = loadName("nameA", "File A");
-    nameB.value = loadName("nameB", "File B");
+    nameA.value = loadName("nameA", "File Before");
+    nameB.value = loadName("nameB", "File After");
     nameA.addEventListener("input", syncNames);
     nameB.addEventListener("input", syncNames);
 
@@ -537,7 +547,7 @@ var FileComparer = (function () {
     inputA.focus();
   }
 
-  return { init: init, diffLines: diffLines, wordHighlight: wordHighlight,
+  return { init: init, diffLines: diffLines, splitLines: splitLines, wordHighlight: wordHighlight,
            buildRows: buildRows, buildPaneLines: buildPaneLines,
            buildBlocks: buildBlocks };
 })();

@@ -56,6 +56,35 @@ eq("empty right", opsStr(FC.diffLines(["a", "b"], [])), "-1 -2");
 eq("both empty", opsStr(FC.diffLines([], [])), "");
 eq("interleaved edit", opsStr(FC.diffLines(["1", "2", "3", "4"], ["1", "3", "5", "4"])), "=1 -2 =3 +3 =4");
 
+/* ── splitLines (trailing-newline normalization) ── */
+eq("splitLines plain", JSON.stringify(FC.splitLines("a\nb")), "[\"a\",\"b\"]");
+eq("splitLines drops one phantom trailing empty", JSON.stringify(FC.splitLines("a\nb\n")), "[\"a\",\"b\"]");
+eq("splitLines keeps real blank line", JSON.stringify(FC.splitLines("a\n\nb\n")), "[\"a\",\"\",\"b\"]");
+eq("splitLines keeps genuine trailing blank line", JSON.stringify(FC.splitLines("a\nb\n\n")), "[\"a\",\"b\",\"\"]");
+eq("splitLines single line no trailing newline", JSON.stringify(FC.splitLines("a")), "[\"a\"]");
+eq("splitLines single newline only", JSON.stringify(FC.splitLines("\n")), "[\"\"]");
+{
+  const aLines = FC.splitLines("a\nb\n"), bLines = FC.splitLines("a\nb\n");
+  const rows = FC.buildRows(FC.diffLines(aLines, bLines), aLines, bLines);
+  eq("trailing \\n both sides → equal rows, no del/ins", rowStr(rows), "eq:1/1 eq:2/2");
+  eq("trailing \\n both sides → no added/removed count",
+     JSON.stringify(rows.stats),
+     JSON.stringify({ same: 2, changed: 0, added: 0, removed: 0 }));
+}
+{
+  const aLines = FC.splitLines("a\n"), bLines = FC.splitLines("a");
+  const rows = FC.buildRows(FC.diffLines(aLines, bLines), aLines, bLines);
+  eq("trailing \\n vs none → equal rows, no del/ins", rowStr(rows), "eq:1/1");
+}
+{
+  const aLines = FC.splitLines("a\n"), bLines = FC.splitLines("a\n\n");
+  const rows = FC.buildRows(FC.diffLines(aLines, bLines), aLines, bLines);
+  eq("genuine extra blank line → real ins row", rowStr(rows), "eq:1/1 ins:-/2");
+  eq("genuine blank line added stats",
+     JSON.stringify(rows.stats),
+     JSON.stringify({ same: 1, changed: 0, added: 1, removed: 0 }));
+}
+
 /* ── word-level highlight ── */
 {
   const wh = FC.wordHighlight("The quick brown fox", "The quick red fox");
