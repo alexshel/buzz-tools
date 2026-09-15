@@ -12,7 +12,10 @@
      pages lay out with .form-grid, so the base must not force one. */
   form { display: flex; flex-direction: column; gap: 12px; }
 
-  input {
+  /* `form input` (not bare `input`): the injected site-header search field
+     must never inherit page-level input styling (e.g. the centered letters
+     field below made the header's Search tools… placeholder center too). */
+  form input {
     width: 100%;
     padding: 14px 16px;
     font-size: 1.15rem;
@@ -26,13 +29,13 @@
     outline: none;
     transition: border-color 120ms ease, box-shadow 120ms ease;
   }
-  input::placeholder {
+  form input::placeholder {
     color: var(--ink-soft);
     font-weight: 400;
     letter-spacing: 0;
     opacity: 0.75;
   }
-  input:focus {
+  form input:focus {
     border-color: var(--accent);
     box-shadow: 0 0 0 3px var(--ring);
   }

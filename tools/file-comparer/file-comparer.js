@@ -183,9 +183,10 @@ var FileComparer = (function () {
   var inputA, inputB, nameA, nameB, compareBtn, clearBtn, sampleBtn,
       status, diffSummary, gutterA, gutterB, fillA, fillB,
       countAChars, countALines, countBChars, countBLines,
-      editorA, editorB, cmBody, resizeHandle;
+      editorA, editorB, cmBody, resizeHandle, scrollLockBtn;
   var lastBlocks = [];          /* change blocks from the latest Compare */
   var lastLineH = 20;           /* measured pane line height (px) */
+  var scrollLocked = false;     /* scroll-lock toggle state */
   var EDITOR_H_KEY = "file-comparer.editorH";
   var EDITOR_H_MIN = 160, EDITOR_H_MAX = 900;
 
@@ -248,6 +249,35 @@ var FileComparer = (function () {
   function syncScrolls(ta, gInner, fEl) {
     gInner.style.transform = "translateY(" + (-ta.scrollTop) + "px)";
     fEl.style.transform = "translate(" + (-ta.scrollLeft) + "px," + (-ta.scrollTop) + "px)";
+  }
+
+  /* ---- scroll-lock (both panes scroll together, line 1 matching) ----
+     Source pane reports its top line; the other pane is scrolled to that same
+     line (clamped to its own content). The |delta| guard makes the async
+     scroll events each set triggers a no-op, so the pair can't ping-pong. */
+  function maxScroll(ta) { return Math.max(0, ta.scrollHeight - ta.clientHeight); }
+  function topLineOf(ta) { return Math.round(ta.scrollTop / lastLineH); }
+  function scrollToTopLine(ta, line) {
+    var target = Math.min(Math.max(0, line) * lastLineH, maxScroll(ta));
+    if (Math.abs(ta.scrollTop - target) > 1) ta.scrollTop = target;
+  }
+
+  function setScrollLock(on) {
+    scrollLocked = !!on;
+    scrollLockBtn.setAttribute("aria-pressed", String(scrollLocked));
+    scrollLockBtn.setAttribute("aria-label",
+      scrollLocked ? "Unlock scrolling" : "Lock scrolling together");
+    scrollLockBtn.title = scrollLocked
+      ? "Unlock scrolling — the panes scroll independently again"
+      : "Lock scrolling — both panes scroll together, line 1 matching";
+    /* locking snaps both panes to the same top line immediately */
+    if (scrollLocked) {
+      var line = topLineOf(inputA);
+      scrollToTopLine(inputA, line);
+      scrollToTopLine(inputB, line);
+      syncScrolls(inputA, gutterA, fillA);
+      syncScrolls(inputB, gutterB, fillB);
+    }
   }
 
   /* an edit invalidates the diff highlights → drop them + refresh gutter/counts */
@@ -461,6 +491,7 @@ var FileComparer = (function () {
     editorB = doc.getElementById("editor-b");
     cmBody = doc.getElementById("cm-body");
     resizeHandle = doc.getElementById("resize-handle");
+    scrollLockBtn = doc.getElementById("scroll-lock");
 
     nameA.value = loadName("nameA", "File A");
     nameB.value = loadName("nameB", "File B");
@@ -473,8 +504,14 @@ var FileComparer = (function () {
     inputB.addEventListener("input", function () {
       onPaneInput(inputB, gutterB, countBChars, countBLines, "b");
     });
-    inputA.addEventListener("scroll", function () { syncScrolls(inputA, gutterA, fillA); });
-    inputB.addEventListener("scroll", function () { syncScrolls(inputB, gutterB, fillB); });
+    inputA.addEventListener("scroll", function () {
+      syncScrolls(inputA, gutterA, fillA);
+      if (scrollLocked) scrollToTopLine(inputB, topLineOf(inputA));
+    });
+    inputB.addEventListener("scroll", function () {
+      syncScrolls(inputB, gutterB, fillB);
+      if (scrollLocked) scrollToTopLine(inputA, topLineOf(inputB));
+    });
 
     updateCount(inputA, countAChars, countALines);
     updateCount(inputB, countBChars, countBLines);
@@ -484,6 +521,7 @@ var FileComparer = (function () {
     compareBtn.addEventListener("click", compare);
     clearBtn.addEventListener("click", clearAll);
     sampleBtn.addEventListener("click", loadSample);
+    scrollLockBtn.addEventListener("click", function () { setScrollLock(!scrollLocked); });
     setupResize();
     restoreEditorHeight();
 

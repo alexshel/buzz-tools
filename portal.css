@@ -86,23 +86,32 @@ body {
 }
 .mega-trigger {
   width: 100%;
-  padding: 6px 12px 6px 14px;
+  padding: 8px 16px 8px 18px;
   font-size: 0.92rem;
-  font-weight: 500;
-  color: var(--ink-soft);
-  background: none;
-  border: none;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--bg);
+  border: 1px solid var(--rule);
   border-radius: 999px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
   cursor: pointer;
   font-family: inherit;
   white-space: nowrap;
-  transition: color 120ms ease, background 120ms ease;
+  transition: color 120ms ease, background 120ms ease,
+              border-color 120ms ease, box-shadow 120ms ease;
 }
 .mega-trigger:hover,
-.mega-trigger:focus-visible,
-.mega-item.open .mega-trigger {
+.mega-trigger:focus-visible {
   color: var(--ink);
   background: var(--accent-soft);
+  border-color: var(--accent);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.08);
+}
+.mega-item.open .mega-trigger {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.08);
 }
 .mega-trigger::after {
   content: "\25BE";
@@ -569,6 +578,7 @@ button:focus-visible {
   font-size: 0.88rem;
   font-family: inherit;
   color: var(--ink);
+  text-align: left; /* shared header: never inherit page-level input centering */
   background: var(--bg);
   border: 1px solid var(--rule);
   border-radius: 999px;
